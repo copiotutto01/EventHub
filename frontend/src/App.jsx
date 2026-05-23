@@ -1,122 +1,75 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import Navbar from './components/Navbar';
+import keycloak from './auth/keycloak';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div style={styles.container}>
+      {/* Barra di Navigazione superiore */}
+      <Navbar />
+      
+      {/* Contenuto Principale della Pagina */}
+      <main style={styles.mainContent}>
+        <div style={styles.card}>
+          <h1>Benvenuto su EventHub! 🚀</h1>
+          <p>La piattaforma definitiva per scoprire, prenotare e organizzare eventi straordinari.</p>
+          
+          {keycloak.authenticated ? (
+            <div style={styles.statusSuccess}>
+              <p>🟢 Sei connesso al sistema in modo sicuro tramite Keycloak!</p>
+              <p style={{ fontSize: '0.9rem', color: '#666' }}>
+                ID Utente: {keycloak.tokenParsed?.sub}
+              </p>
+            </div>
+          ) : (
+            <div style={styles.statusWarning}>
+              <p>🔴 Al momento sei un ospite anonimo. Clicca su "Accedi" in alto per sbloccare tutte le funzionalità.</p>
+            </div>
+          )}
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      </main>
+    </div>
+  );
 }
 
-export default App
+const styles = {
+  container: {
+    fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+    backgroundColor: '#f4f6f9',
+    minHeight: '100vh',
+    margin: 0
+  },
+  mainContent: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '3rem 1rem'
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    padding: '2.5rem',
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+    textAlign: 'center',
+    maxWidth: '600px',
+    width: '100%'
+  },
+  statusSuccess: {
+    backgroundColor: '#d4edda',
+    color: '#155724',
+    padding: '1rem',
+    borderRadius: '6px',
+    marginTop: '1.5rem',
+    border: '1px solid #c3e6cb'
+  },
+  statusWarning: {
+    backgroundColor: '#fff3cd',
+    color: '#856404',
+    padding: '1rem',
+    borderRadius: '6px',
+    marginTop: '1.5rem',
+    border: '1px solid #ffeeba'
+  }
+};
+
+export default App;

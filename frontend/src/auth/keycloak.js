@@ -1,10 +1,9 @@
 import Keycloak from 'keycloak-js';
 
-// Configurazione del client Keycloak per il Frontend
 const keycloakConfig = {
-  url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080',
+  url: 'https://symmetrical-fishstick-4jxj6vp7qq5wc7wp-8080.app.github.dev', 
   realm: 'eventhub',
-  clientId: 'eventhub-frontend', // Questo sarà il client ID che configureremo su Keycloak
+  clientId: 'eventhub-frontend',
 };
 
 const keycloak = new Keycloak(keycloakConfig);
@@ -12,21 +11,30 @@ const keycloak = new Keycloak(keycloakConfig);
 export const initKeycloak = (onAuthenticatedCallback) => {
   keycloak
     .init({
-      onLoad: 'check-sso', // Controlla se l'utente è già loggato in background senza forzare il login immediato
-      silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
-      pkceMethod: 'S256', // Standard di sicurezza moderno per applicazioni Single Page (SPA)
+      // Usiamo 'on-load' standard senza sso silente per evitare blocchi sui cookie di terze parti
+      onLoad: 'check-sso',
+      checkLoginIframe: false,
+      pkceMethod: 'S256',
+      flow: 'standard'
     })
     .then((authenticated) => {
+      console.log('[KEYCLOAK] Risultato inizializzazione. Autenticato:', authenticated);
+      
       if (authenticated) {
-        console.log('[KEYCLOAK] Utente autenticato con successo!');
+        console.log('[KEYCLOAK] Token valido ottenuto:', keycloak.token);
+        // Memorizziamo il token a livello globale per renderlo accessibile ad Axios
+        window.token = keycloak.token;
+        window.authenticated = true;
       } else {
-        console.log('[KEYCLOAK] Utente non autenticato.');
+        console.warn('[KEYCLOAK] Inizializzato ma l\'utente non è autenticato.');
+        window.authenticated = false;
       }
       onAuthenticatedCallback();
     })
     .catch((err) => {
-      console.error('[KEYCLOAK] Errore durante l'inizializzazione:', err);
-      onAuthenticatedCallback();
+      console.error('[KEYCLOAK] Errore critico di inizializzazione:', err);
+      window.authenticated = false;
+      onAuthenticatedCallback(); 
     });
 };
 

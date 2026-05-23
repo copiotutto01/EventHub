@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
+    <title>Silent Check SSO</title>
 </head>
 <body>
     <script>
-        parent.postMessage(JSON.stringify({
-            type: 'AUTH_RESPONSE',
-            response: window.location.hash
-        }), window.location.origin);
+        parent.postMessage(location.href, location.origin);
     </script>
 </body>
 </html>
