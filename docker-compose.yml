@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-# Servizio Backend Flask
+  # Servizio Backend Flask
   backend:
     build: ./backend
     container_name: eventhub_backend
@@ -12,11 +12,32 @@ services:
     environment:
       - DATABASE_URL=postgresql://eventhub_admin:supersecretpassword123@postgres:5432/eventhub_db
       - FLASK_ENV=development
+      - CELERY_BROKER_URL=redis://eventhub_redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://eventhub_redis:6379/0
     depends_on:
       - postgres
       - keycloak
+      - redis
     networks:
       - eventhub_network
+
+  # Worker Celery per i task asincroni
+  celery:
+    build: ./backend
+    container_name: eventhub_celery
+    command: celery -A app.celery_app worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://eventhub_admin:supersecretpassword123@postgres:5432/eventhub_db
+      - CELERY_BROKER_URL=redis://eventhub_redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://eventhub_redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - eventhub_network
+
   # Database per l'applicazione e per Keycloak
   postgres:
     image: postgres:15-alpine
@@ -32,7 +53,6 @@ services:
     networks:
       - eventhub_network
 
-  # Servizio di Autenticazione Keycloak
   # Servizio di Autenticazione Keycloak
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
