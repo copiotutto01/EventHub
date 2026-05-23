@@ -17,10 +17,11 @@ services:
       - eventhub_network
 
   # Servizio di Autenticazione Keycloak
+  # Servizio di Autenticazione Keycloak
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
     container_name: eventhub_auth
-    command: start-dev
+    command: start-dev --http-relative-path=/
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: adminpassword123
@@ -28,6 +29,10 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/eventhub_db
       KC_DB_USERNAME: eventhub_admin
       KC_DB_PASSWORD: supersecretpassword123
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: "edge"
     ports:
       - "8080:8080"
     depends_on:
