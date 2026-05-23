@@ -11,7 +11,6 @@ load_dotenv()
 db = SQLAlchemy()
 migrate = Migrate()
 
-# Funzione per creare e configurare l'istanza di Celery collegata a Flask
 def make_celery(app):
     celery = Celery(
         app.import_name,
@@ -35,7 +34,6 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     
-    # Configurazione Celery all'interno di Flask
     app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'redis://eventhub_redis:6379/0')
     app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'redis://eventhub_redis:6379/0')
     
@@ -52,9 +50,11 @@ def create_app():
     # --- REGISTRAZIONE BLUEPRINTS ---
     from routes.events import events_bp
     from routes.reviews import reviews_bp
+    from routes.registrations import registrations_bp # <--- Nuovo Import
     
     app.register_blueprint(events_bp)
     app.register_blueprint(reviews_bp)
+    app.register_blueprint(registrations_bp)          # <--- Nuova Registrazione
     # --------------------------------
 
     @app.route('/api/health', methods=['GET'])
@@ -74,7 +74,6 @@ def create_app():
 
     return app
 
-# Istanza globale per permettere a Flask e al Worker Celery di avviarsi correttamente
 flask_app = create_app()
 celery_app = make_celery(flask_app)
 
