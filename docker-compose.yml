@@ -1,6 +1,23 @@
 version: '3.8'
 
 services:
+  # Servizio Frontend React (Vite)
+  frontend:
+    build: ./frontend
+    container_name: eventhub_frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+      - VITE_KEYCLOAK_URL=http://localhost:8080
+    depends_on:
+      - backend
+    networks:
+      - eventhub_network
+
   # Servizio Backend Flask
   backend:
     build: ./backend
