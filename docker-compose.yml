@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+# Servizio Backend Flask
+  backend:
+    build: ./backend
+    container_name: eventhub_backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://eventhub_admin:supersecretpassword123@postgres:5432/eventhub_db
+      - FLASK_ENV=development
+    depends_on:
+      - postgres
+      - keycloak
+    networks:
+      - eventhub_network
   # Database per l'applicazione e per Keycloak
   postgres:
     image: postgres:15-alpine
