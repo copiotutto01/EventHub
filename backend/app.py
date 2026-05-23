@@ -29,7 +29,10 @@ def create_app():
 
     # --- REGISTRAZIONE BLUEPRINTS ---
     from routes.events import events_bp
+    from routes.reviews import reviews_bp # <--- Nuovo Import
+    
     app.register_blueprint(events_bp)
+    app.register_blueprint(reviews_bp)    # <--- Nuova Registrazione
     # --------------------------------
 
     @app.route('/api/health', methods=['GET'])
