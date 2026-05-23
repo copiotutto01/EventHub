@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Database per l'applicazione e per Keycloak
+  postgres:
+    image: postgres:15-alpine
+    container_name: eventhub_db
+    environment:
+      POSTGRES_DB: eventhub_db
+      POSTGRES_USER: eventhub_admin
+      POSTGRES_PASSWORD: supersecretpassword123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - eventhub_network
+
+  # Servizio di Autenticazione Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: eventhub_auth
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: adminpassword123
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/eventhub_db
+      KC_DB_USERNAME: eventhub_admin
+      KC_DB_PASSWORD: supersecretpassword123
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - eventhub_network
+
+  # Redis per la gestione dei task asincroni (Celery)
+  redis:
+    image: redis:7-alpine
+    container_name: eventhub_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - eventhub_network
+
+networks:
+  eventhub_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
