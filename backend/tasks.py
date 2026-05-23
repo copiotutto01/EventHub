@@ -1,5 +1,6 @@
 import time
-from app import celery_app
+# Cambia l'import da "from app import celery_app" a questo:
+from extensions import celery_app
 
 @celery_app.task(name="tasks.send_email_notification")
 def send_email_notification(user_email, event_title):

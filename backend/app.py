@@ -1,31 +1,12 @@
 import os
 from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask_cors import CORS
 from dotenv import load_dotenv
-from celery import Celery
+
+# Importiamo tutto dal file delle estensioni isolato
+from extensions import db, migrate, init_celery
 
 load_dotenv()
-
-db = SQLAlchemy()
-migrate = Migrate()
-
-def make_celery(app):
-    celery = Celery(
-        app.import_name,
-        backend=os.getenv('CELERY_RESULT_BACKEND', 'redis://eventhub_redis:6379/0'),
-        broker=os.getenv('CELERY_BROKER_URL', 'redis://eventhub_redis:6379/0')
-    )
-    celery.conf.update(app.config)
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery.Task = ContextTask
-    return celery
 
 def create_app():
     app = Flask(__name__)
@@ -40,22 +21,28 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static/uploads')
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
+    # Inizializzazione database
     db.init_app(app)
     migrate.init_app(app, db)
     CORS(app)
     
-    from models.models import Event, Review
-    from auth import token_required
-
-    # --- REGISTRAZIONE BLUEPRINTS ---
-    from routes.events import events_bp
-    from routes.reviews import reviews_bp
-    from routes.registrations import registrations_bp # <--- Nuovo Import
+    # Inizializzazione Celery col contesto di questa app
+    init_celery(app)
     
-    app.register_blueprint(events_bp)
-    app.register_blueprint(reviews_bp)
-    app.register_blueprint(registrations_bp)          # <--- Nuova Registrazione
-    # --------------------------------
+    with app.app_context():
+        from models.models import Event, Review
+        db.create_all()
+        
+        # Carichiamo i Blueprint solo ora che le estensioni sono pronte
+        from routes.events import events_bp
+        from routes.reviews import reviews_bp
+        from routes.registrations import registrations_bp
+        
+        app.register_blueprint(events_bp)
+        app.register_blueprint(reviews_bp)
+        app.register_blueprint(registrations_bp)
+
+    from auth import token_required
 
     @app.route('/api/health', methods=['GET'])
     def health_check():
@@ -74,8 +61,8 @@ def create_app():
 
     return app
 
+# Istanza globale dell'applicazione Flask
 flask_app = create_app()
-celery_app = make_celery(flask_app)
 
 if __name__ == '__main__':
     flask_app.run(host='0.0.0.0', port=5000, debug=True)

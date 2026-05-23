@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app import db
+from extensions import db
 from models.models import Event, event_registrations
 from auth import token_required
 from tasks import send_email_notification
