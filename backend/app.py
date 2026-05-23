@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
@@ -24,14 +24,27 @@ def create_app():
     migrate.init_app(app, db)
     CORS(app)
     
-    # Import dei modelli differito per evitare cicli
     from models.models import Event, Review
+    from auth import token_required
+
+    # --- REGISTRAZIONE BLUEPRINTS ---
+    from routes.events import events_bp
+    app.register_blueprint(events_bp)
+    # --------------------------------
 
     @app.route('/api/health', methods=['GET'])
     def health_check():
         return jsonify({
             "status": "healthy",
             "message": "EventHub Backend attivo e funzionante!"
+        }), 200
+
+    @app.route('/api/protected', methods=['GET'])
+    @token_required
+    def protected_test():
+        return jsonify({
+            "message": f"Ciao {request.user['username']}, hai effettuato l'accesso all'area protetta!",
+            "user_info": request.user
         }), 200
 
     return app
