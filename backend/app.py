@@ -23,13 +23,13 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     
-    # 🌟 CONFIGURAZIONE CORS BLINDATA PER GITHUB CODESPACES
-    # Gestisce correttamente i preflight (OPTIONS) e accetta gli header di autorizzazione di Keycloak
+    # 🌟 CONFIGURAZIONE CORS AGGIORNATA PER SUPPORTARE CREDENTIALS E ORIGINI DINAMICHE
     CORS(app, resources={
         r"/*": {
             "origins": "*",
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin"]
+            "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+            "supports_credentials": True
         }
     })
     

@@ -1,0 +1,52 @@
+{
+  "translation": {
+    "navbar": {
+      "title": "🎉 EventHub",
+      "welcome": "Hello, {{name}}",
+      "organizerBadge": "Organizer",
+      "logout": "Logout",
+      "login": "Login / Register"
+    },
+    "hero": {
+      "title": "Discover and Manage the Best Live Events 🚀",
+      "description": "Welcome to EventHub! If you are a fan, log in to book your tickets and review your experiences. If you are an organizer, manage and publish your live events in just a few clicks.",
+      "cta": "Get Started • Login or Register 🎟️"
+    },
+    "organizer": {
+      "panelTitle": "🛠️ Organizer Panel",
+      "eventTitle": "Event Title",
+      "location": "Location",
+      "price": "Price",
+      "tickets": "Available Tickets",
+      "description": "Description...",
+      "submit": "Publish Live Event 🚀"
+    },
+    "events": {
+      "title": "📅 Available Events",
+      "loading": "Loading...",
+      "priceFree": "Free",
+      "ticketsLeft": "Tickets: {{count}}",
+      "alreadyBooked": "🎟️ Already Booked",
+      "bookNow": "Book Now",
+      "delete": "🗑️ Delete Event",
+      "reviews": "⭐ Reviews",
+      "noReviews": "No reviews yet.",
+      "writeReview": "Write a comment...",
+      "sendReview": "Send",
+      "reviewSuccess": "⭐ Review added!",
+      "reviewError": "❌ Unable to add review."
+    },
+    "sidebar": {
+      "title": "🎟️ Your Tickets",
+      "noTickets": "You haven't booked any events yet."
+    },
+    "alerts": {
+      "confirmDelete": "Are you sure you want to delete this event permanently?",
+      "deleteSuccess": "🗑️ Event successfully deleted!",
+      "deleteError": "❌ Unable to delete event.",
+      "bookSuccess": "🎉 Booking completed!",
+      "bookError": "❌ Error during booking.",
+      "createSuccess": "🚀 Event published!"
+    }
+  }
+}

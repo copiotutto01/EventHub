@@ -1,5 +1,5 @@
 import api from './api';
-import axios from 'axios'; // 🌟 Importiamo l'axios standard
+import axios from 'axios'; 
 import keycloak from '../auth/keycloak';
 
 // Recupera tutti gli eventi
@@ -13,15 +13,13 @@ export const getEvents = async () => {
   }
 };
 
-// Effettua la prenotazione forzando l'header pulito con Axios standard
+// Effettua la prenotazione sulla porta corretta (5001) tramite istanza condivisa
 export const bookEvent = async (eventId) => {
   try {
     const token = keycloak.token;
     
-    // Costruiamo l'URL assoluto puntando direttamente al backend sulla porta 5000
-    const url = `https://symmetrical-fishstick-4jxj6vp7qq5wc7wp-5000.app.github.dev/api/events/${eventId}/register`;
-
-    const response = await axios.post(url, {}, {
+    // Utilizziamo l'istanza 'api' preconfigurata così eredita automaticamente la porta 5001 corretta
+    const response = await api.post(`/api/events/${eventId}/register`, {}, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'

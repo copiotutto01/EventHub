@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import keycloak from './auth/keycloak';
 import { getEvents, bookEvent } from './services/eventService';
 import axios from 'axios';
@@ -8,6 +9,7 @@ import './App.css';
 const FIXED_BACKEND_URL = 'https://symmetrical-fishstick-4jxj6vp7qq5wc7wp-5001.app.github.dev';
 
 function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBookEvent, handleDeleteEvent, token }) {
+  const { t } = useTranslation();
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
@@ -27,7 +29,7 @@ function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBoo
 
   const handleAddReview = async (e) => {
     e.preventDefault();
-    if (!comment.trim()) return alert("Inserisci un commento!");
+    if (!comment.trim()) return alert(t('events.writeReview'));
 
     try {
       await axios.post(
@@ -35,17 +37,16 @@ function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBoo
         { rating: parseInt(rating), comment: comment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("⭐ Recensione aggiunta!");
+      alert(t('events.reviewSuccess'));
       setComment('');
       setRating(5);
       loadReviews();
     } catch (error) {
       console.error("Errore recensione:", error);
-      alert("❌ Impossibile aggiungere la recensione.");
+      alert(t('events.reviewError'));
     }
   };
 
-  // FORZATURA: Se sei organizzatore, vedi il tasto elimina su qualunque evento per fare pulizia
   const isOwner = isOrganizer;
 
   return (
@@ -54,20 +55,20 @@ function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBoo
       <p className="description">{event.description}</p>
       <div className="event-details">
         <span>📍 {event.location}</span>
-        <span>📅 {new Date(event.date).toLocaleDateString('it-IT')}</span>
-        <span className="price">💰 {event.price === 0 ? 'Gratis' : `${event.price} €`}</span>
+        <span>📅 {new Date(event.date).toLocaleDateString()}</span>
+        <span className="price">💰 {event.price === 0 ? t('events.priceFree') : `${event.price} €`}</span>
       </div>
       <div className="card-footer">
-        <span className="tickets">Biglietti: {event.available_tickets}</span>
+        <span className="tickets">{t('events.ticketsLeft', { count: event.available_tickets })}</span>
         
         {isLogged && !isOrganizer && (
           myEvents.some(booked => booked.id === event.id) ? (
             <button className="btn-book" disabled style={{ backgroundColor: '#bdc3c7', color: '#7f8c8d', cursor: 'not-allowed' }}>
-              🎟️ Già Prenotato
+              {t('events.alreadyBooked')}
             </button>
           ) : (
             <button className="btn-book" onClick={() => handleBookEvent(event.id)}>
-              Prenota Ora
+              {t('events.bookNow')}
             </button>
           )
         )}
@@ -78,15 +79,15 @@ function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBoo
             onClick={() => handleDeleteEvent(event.id)} 
             style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '6px 12px', cursor: 'pointer', borderRadius: '4px' }}
           >
-            🗑️ Elimina Evento
+            {t('events.delete')}
           </button>
         )}
       </div>
 
       <div className="reviews-section" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-        <h5 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>⭐ Recensioni</h5>
+        <h5 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>{t('events.reviews')}</h5>
         {reviews.length === 0 ? (
-          <p style={{ fontSize: '12px', color: '#95a5a6', fontStyle: 'italic' }}>Nessuna recensione.</p>
+          <p style={{ fontSize: '12px', color: '#95a5a6', fontStyle: 'italic' }}>{t('events.noReviews')}</p>
         ) : (
           <div style={{ maxHeight: '120px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {reviews.map((rev) => (
@@ -111,8 +112,8 @@ function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBoo
               <option value="1">⭐ (1)</option>
             </select>
             <div style={{ display: 'flex', gap: '5px' }}>
-              <input type="text" placeholder="Scrivi un commento..." value={comment} onChange={(e) => setComment(e.target.value)} style={{ flex: 1, padding: '6px', fontSize: '12px' }} />
-              <button type="submit" style={{ backgroundColor: '#2ecc71', color: '#fff', border: 'none', padding: '6px', cursor: 'pointer' }}>Invia</button>
+              <input type="text" placeholder={t('events.writeReview')} value={comment} onChange={(e) => setComment(e.target.value)} style={{ flex: 1, padding: '6px', fontSize: '12px' }} />
+              <button type="submit" style={{ backgroundColor: '#2ecc71', color: '#fff', border: 'none', padding: '6px', cursor: 'pointer' }}>{t('events.sendReview')}</button>
             </div>
           </form>
         )}
@@ -122,6 +123,7 @@ function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBoo
 }
 
 function App() {
+  const { t, i18n } = useTranslation();
   const [isLogged, setIsLogged] = useState(false);
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -129,7 +131,11 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [myEvents, setMyEvents] = useState([]);
 
-  const [newEvent, setNewEvent] = useState({ title: '', description: '', date: '', location: '', price: 0, available_tickets: 50 });
+  const [newEvent, setNewEvent] = useState({ title: '', description: '', date: '', location: '', price: '', available_tickets: '' });
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+  };
 
   const loadEvents = () => {
     getEvents()
@@ -177,78 +183,119 @@ function App() {
   const handleBookEvent = async (eventId) => {
     try {
       await bookEvent(eventId);
-      alert("🎉 Prenotazione completata!");
+      alert(t('alerts.bookSuccess'));
       loadEvents();
       loadMyEvents();
     } catch (error) {
-      alert("❌ Errore durante la prenotazione.");
+      alert(t('alerts.bookError'));
     }
   };
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${FIXED_BACKEND_URL}/api/events`, newEvent, {
+      const parsedPrice = parseFloat(newEvent.price);
+      const parsedTickets = parseInt(newEvent.available_tickets, 10);
+      const ticketsValue = isNaN(parsedTickets) ? 50 : parsedTickets;
+
+      // FORCE_BUILD: Payload pulito escludendo rigorosamente 'available_tickets'
+      const eventDataToSend = {
+        title: newEvent.title.trim(),
+        location: newEvent.location.trim(),
+        date: newEvent.date,
+        price: isNaN(parsedPrice) ? 0.0 : parsedPrice,
+        max_tickets: ticketsValue,
+        total_tickets: ticketsValue,
+        description: newEvent.description.trim(),
+        category: 'Generico'
+      };
+
+      console.log("=== DEBUG PAYLOAD EVENTO ===", eventDataToSend);
+
+      await axios.post(`${FIXED_BACKEND_URL}/api/events`, eventDataToSend, {
         headers: { 
           'Authorization': `Bearer ${keycloak.token}`,
           'Content-Type': 'application/json'
         }
       });
-      alert("🚀 Evento pubblicato!");
-      setNewEvent({ title: '', description: '', date: '', location: '', price: 0, available_tickets: 50 });
+      
+      alert(t('alerts.createSuccess') || "Evento pubblicato con successo!");
+      setNewEvent({ title: '', description: '', date: '', location: '', price: '', available_tickets: '' });
       loadEvents();
     } catch (error) {
       console.error("Errore creazione evento:", error);
-      if (error.response && error.response.data && error.response.data.message) {
-        alert(`❌ Errore: ${error.response.data.message}`);
-      } else {
-        alert("❌ Errore permessi. Assicurati che l'utente abbia il ruolo 'organizer' su Keycloak.");
-      }
+      const serverMessage = error.response?.data?.message || "Errore durante la creazione dell'evento.";
+      alert(serverMessage);
     }
   };
 
   const handleDeleteEvent = async (eventId) => {
-    if (!window.confirm("Sei sicuro di voler eliminare questo evento definitivamente?")) return;
+    if (!window.confirm(t('alerts.confirmDelete'))) return;
     try {
       await axios.delete(`${FIXED_BACKEND_URL}/api/events/${eventId}`, {
         headers: { Authorization: `Bearer ${keycloak.token}` }
       });
-      alert("🗑️ Evento eliminato con successo!");
+      alert(t('alerts.deleteSuccess'));
       loadEvents();
     } catch (error) {
       console.error("Errore durante l'eliminazione:", error);
-      alert("❌ Impossibile eliminare l'evento.");
+      alert(t('alerts.deleteError'));
     }
   };
 
   return (
     <div className="app-container">
       <nav className="navbar">
-        <h1 className="logo">🎉 EventHub</h1>
+        <h1 className="logo">{t('navbar.title')}</h1>
         <div className="nav-auth">
+          <div className="lang-switcher" style={{ marginRight: '15px', display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={() => changeLanguage('it')} 
+              style={{ 
+                background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', 
+                opacity: i18n.language === 'it' ? 1 : 0.4, transform: i18n.language === 'it' ? 'scale(1.15)' : 'scale(1)',
+                transition: 'all 0.2s' 
+              }}
+              title="Italiano"
+            >
+              🇮🇹
+            </button>
+            <button 
+              onClick={() => changeLanguage('en')} 
+              style={{ 
+                background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', 
+                opacity: i18n.language === 'en' ? 1 : 0.4, transform: i18n.language === 'en' ? 'scale(1.15)' : 'scale(1)',
+                transition: 'all 0.2s' 
+              }}
+              title="English"
+            >
+              🇬🇧
+            </button>
+          </div>
+
           {isLogged ? (
             <>
-              <span className="welcome-text">Ciao, <strong>{userData?.name}</strong> {isOrganizer && <span style={{fontSize: '11px', backgroundColor: '#e67e22', color: '#fff', padding: '2px 6px', borderRadius: '4px'}}>Organizzatore</span>}</span>
-              <button className="btn-logout" onClick={() => keycloak.logout({ redirectUri: window.location.origin })}>Esci</button>
+              <span className="welcome-text">
+                {t('navbar.welcome', { name: userData?.name })} {' '}
+                {isOrganizer && <span style={{fontSize: '11px', backgroundColor: '#e67e22', color: '#fff', padding: '2px 6px', borderRadius: '4px'}}>{t('navbar.organizerBadge')}</span>}
+              </span>
+              <button className="btn-logout" onClick={() => keycloak.logout({ redirectUri: window.location.origin })}>{t('navbar.logout')}</button>
             </>
           ) : (
-            <button className="btn-login" onClick={() => keycloak.login()}>Accedi / Registrati</button>
+            <button className="btn-login" onClick={() => keycloak.login()}>{t('navbar.login')}</button>
           )}
         </div>
       </nav>
 
-      {/* Controllo condizionale principale */}
       {!isLogged ? (
         <div className="presentation-screen" style={{ textAlign: 'center', padding: '60px 20px', maxWidth: '800px', margin: '0 auto' }}>
-          <h2>Scopri e Gestisci i Migliori Eventi Live 🚀</h2>
-          <p>
-            Benvenuto su <strong>EventHub</strong>! Se sei un appassionato, effettua l'accesso per prenotare i tuoi biglietti e recensire le tue esperienze. Se sei un organizzatore, gestisci e pubblica i tuoi eventi live in pochi clic.
-          </p>
+          <h2>{t('hero.title')}</h2>
+          <p>{t('hero.description')}</p>
           <button 
             onClick={() => keycloak.login()} 
-            style={{ backgroundColor: '#2ecc71', color: 'white', border: 'none', padding: '15px 40px', fontSize: '1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(46, 204, 113, 0.3)' }}
+            style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '15px 40px', fontSize: '1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(79, 70, 229, 0.3)' }}
           >
-            Inizia Ora • Accedi o Registrati 🎟️
+            {t('hero.cta')}
           </button>
         </div>
       ) : (
@@ -257,22 +304,22 @@ function App() {
           <div className="content-area">
             {isOrganizer && (
               <section className="organizer-panel" style={{ backgroundColor: '#fcf3cf', padding: '25px', borderRadius: '12px', border: '1px solid #f39c12' }}>
-                <h3>🛠️ Pannello Organizzatore</h3>
+                <h3>{t('organizer.panelTitle')}</h3>
                 <form onSubmit={handleCreateEvent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  <input type="text" placeholder="Titolo Evento" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} required />
-                  <input type="text" placeholder="Luogo" value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} required />
+                  <input type="text" placeholder={t('organizer.eventTitle')} value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} required />
+                  <input type="text" placeholder={t('organizer.location')} value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} required />
                   <input type="date" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} required />
-                  <input type="number" min="0" step="0.01" placeholder="Prezzo" value={newEvent.price || ''} onChange={e => setNewEvent({...newEvent, price: parseFloat(e.target.value) || 0})} required   />
-                  <input type="number" min="1" placeholder="Biglietti" value={newEvent.available_tickets || ''} onChange={e => setNewEvent({...newEvent, available_tickets: parseInt(e.target.value) || 50})} required style={{ gridColumn: 'span 2' }} />
-                  <textarea placeholder="Descrizione..." value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} required style={{ gridColumn: 'span 2', height: '80px' }}></textarea>
-                  <button type="submit" style={{ gridColumn: 'span 2', backgroundColor: '#e67e22', color: 'white', cursor: 'pointer', padding: '10px' }}>Pubblica Evento Live 🚀</button>
+                  <input type="number" min="0" step="0.01" placeholder={t('organizer.price')} value={newEvent.price} onChange={e => setNewEvent({...newEvent, price: e.target.value})} required />
+                  <input type="number" min="1" placeholder={t('organizer.tickets')} value={newEvent.available_tickets} onChange={e => setNewEvent({...newEvent, available_tickets: e.target.value})} required style={{ gridColumn: 'span 2' }} />
+                  <textarea placeholder={t('organizer.description')} value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} required style={{ gridColumn: 'span 2', height: '80px' }}></textarea>
+                  <button type="submit" style={{ gridColumn: 'span 2', backgroundColor: '#e67e22', color: 'white', cursor: 'pointer', padding: '10px' }}>{t('organizer.submit')}</button>
                 </form>
               </section>
             )}
 
             <section className="events-section">
-              <h3>📅 Eventi Disponibili</h3>
-              {loading ? <p>Caricamento...</p> : (
+              <h3>{t('events.title')}</h3>
+              {loading ? <p>{t('events.loading')}</p> : (
                 <div className="events-grid">
                   {events.map(ev => (
                     <EventCard 
@@ -294,15 +341,15 @@ function App() {
 
           {!isOrganizer && (
             <aside className="sidebar-tickets">
-              <h3>🎟️ I Tuoi Biglietti</h3>
+              <h3>{t('sidebar.title')}</h3>
               {myEvents.length === 0 ? (
-                <p style={{ color: '#7f8c8d', fontStyle: 'italic', fontSize: '0.95rem' }}>Non hai ancora prenotato nessun evento.</p>
+                <p style={{ color: '#7f8c8d', fontStyle: 'italic', fontSize: '0.95rem' }}>{t('sidebar.noTickets')}</p>
               ) : (
                 myEvents.map(booked => (
                   <div key={booked.id} className="booked-event-item">
                     <h4>{booked.title}</h4>
                     <p>📍 {booked.location}</p>
-                    <p>📅 {new Date(booked.date).toLocaleDateString('it-IT')}</p>
+                    <p>📅 {new Date(booked.date).toLocaleDateString()}</p>
                   </div>
                 ))
               )}

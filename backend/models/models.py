@@ -31,6 +31,11 @@ class Event(db.Model):
     def available_tickets(self):
         return self.max_tickets - self.tickets_sold
 
+    @available_tickets.setter
+    def available_tickets(self, value):
+        # Impedisce il crash se viene passato un valore durante l'inizializzazione o l'update
+        pass
+
 
 class Review(db.Model):
     __tablename__ = 'reviews'

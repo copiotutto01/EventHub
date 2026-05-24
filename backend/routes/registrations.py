@@ -13,14 +13,17 @@ registrations_bp = Blueprint('registrations', __name__)
 @token_required
 def register_to_event(event_id):
     event = Event.query.get_or_404(event_id)
-    user_id = request.user.get('sub') or request.user.get('id')
     
-    if not user_id:
+    # Estrazione e sanificazione dell'ID utente da Keycloak (forzato a stringa pulita)
+    raw_user_id = request.user.get('sub') or request.user.get('id') or request.user.get('preferred_username')
+    if not raw_user_id:
         return jsonify({'message': 'Impossibile identificare l\'utente dal token.'}), 400
-        
+    
+    user_id = str(raw_user_id).strip()
     user_email = request.user.get('email', 'utente@eventhub.local')
 
-    if event.available_tickets <= 0:
+    # Controllo sicuro dei biglietti basato sulle colonne fisiche del DB
+    if (event.max_tickets - event.tickets_sold) <= 0:
         return jsonify({'message': 'Spiacenti, i biglietti per questo evento sono esauriti!'}), 400
 
     is_already_registered = db.session.query(event_registrations).filter_by(
@@ -43,7 +46,8 @@ def register_to_event(event_id):
         )
         db.session.execute(statement)
 
-        event.tickets_sold += 1
+        # Incrementiamo il contatore fisico dei biglietti venduti
+        event.tickets_sold = event.tickets_sold + 1
         db.session.commit()
 
         # Invocazione asincrona sicura Celery
@@ -52,9 +56,12 @@ def register_to_event(event_id):
         except Exception as celery_err:
             print(f"--- [CELERY WARN] ---: Impossibile inviare l'email: {celery_err}")
 
+        # Calcoliamo i biglietti rimasti matematicamente per evitare letture di proprietà instabili in risposta
+        tickets_left = event.max_tickets - event.tickets_sold
+
         return jsonify({
             'message': 'Iscrizione completata con successo! Riceverai una mail di conferma a breve.',
-            'available_tickets_left': event.available_tickets,
+            'available_tickets_left': tickets_left,
             'qr_code_path': mock_qr_path
         }), 201
 
@@ -68,9 +75,11 @@ def register_to_event(event_id):
 @registrations_bp.route('/api/users/me/events', methods=['GET'])
 @token_required
 def get_my_events():
-    user_id = request.user.get('sub') or request.user.get('id')
-    if not user_id:
+    raw_user_id = request.user.get('sub') or request.user.get('id') or request.user.get('preferred_username')
+    if not raw_user_id:
         return jsonify({'message': 'Impossibile identificare l\'utente dal token.'}), 400
+    
+    user_id = str(raw_user_id).strip()
     
     # Eseguiamo una join esplicita per recuperare i campi aggiuntivi della tabella di mezzo (es. qr_code_path)
     results = db.session.query(Event, event_registrations.c.qr_code_path, event_registrations.c.registered_at).join(

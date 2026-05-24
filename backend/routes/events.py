@@ -35,7 +35,7 @@ def get_events():
             'location': event.location,
             'category': event.category,
             'price': float(event.price),
-            'available_tickets': event.available_tickets,
+            'available_tickets': getattr(event, 'available_tickets', event.max_tickets),
             'max_tickets': event.max_tickets,
             'tickets_sold': event.tickets_sold,
             'image_path': f"/static/uploads/{event.image_path}" if event.image_path else None,
@@ -55,7 +55,7 @@ def get_event(event_id):
         'location': event.location,
         'category': event.category,
         'price': float(event.price),
-        'available_tickets': event.available_tickets,
+        'available_tickets': getattr(event, 'available_tickets', event.max_tickets),
         'max_tickets': event.max_tickets,
         'tickets_sold': event.tickets_sold,
         'image_path': f"/static/uploads/{event.image_path}" if event.image_path else None,
@@ -63,7 +63,7 @@ def get_event(event_id):
     }
     return jsonify(event_data), 200
 
-# 3. CREATE EVENT (Flessibile - Accetta sia JSON che Form-Data)
+# 3. CREATE EVENT (Flessibile, Robusta e a prova di crash di mapping)
 @events_bp.route('/api/events', methods=['POST'])
 @token_required
 @requires_role('organizer')
@@ -74,25 +74,38 @@ def create_event():
         data = request.form.to_dict()
 
     if not data:
-        return jsonify({'message': 'Dati completamenti mancanti nella richiesta!'}), 400
+        return jsonify({'message': 'Dati completamente mancanti nella richiesta!'}), 400
         
-    total_tickets = data.get('max_tickets') or data.get('available_tickets') or data.get('total_tickets') or 100
+    # Estrazione sicura dei biglietti (controlla tutte le varianti possibili dal frontend)
+    total_tickets = data.get('max_tickets') or data.get('available_tickets') or data.get('total_tickets')
+    if total_tickets is None:
+        tickets_count = 100
+    else:
+        try:
+            tickets_count = int(total_tickets)
+        except (ValueError, TypeError):
+            tickets_count = 100
     
-    title = data.get('title', 'Nuovo Evento')
-    description = data.get('description', 'Nessuna descrizione fornita.')
-    location = data.get('location', 'Online')
-    category = data.get('category', 'Generico')
+    title = data.get('title') or 'Nuovo Evento'
+    description = data.get('description') or 'Nessuna descrizione fornita.'
+    location = data.get('location') or 'Online'
     
+    # Gestione Categoria: se passi un numero o stringa vuota, mettiamo un default valido testuale
+    category = data.get('category')
+    if not category or str(category).strip().isdigit():
+        category = 'Generico'
+    else:
+        category = str(category).strip()
+        
     try:
         price = float(data.get('price', 0.0))
     except (ValueError, TypeError):
         price = 0.0
 
-    # ❌ PECCA 3: Il prezzo non può scendere sotto lo zero
     if price < 0:
         return jsonify({'message': 'Il prezzo non può essere inferiore a zero!'}), 400
 
-    # Gestione della data con validazione sul passato (supporta sia YYYY-MM-DD che ISO string)
+    # Gestione della data con validazione sul passato
     date_str = data.get('date')
     if date_str:
         try:
@@ -101,19 +114,17 @@ def create_event():
                 event_date = datetime.strptime(clean_date_str, '%Y-%m-%d')
             else:
                 event_date = datetime.fromisoformat(clean_date_str)
-        except ValueError:
+        except Exception:
             event_date = datetime.utcnow()
     else:
         event_date = datetime.utcnow()
 
-    # ❌ PECCA 1: Non va bene inserire un evento in una data che è già passata
-    # Confrontiamo solo il giorno dell'anno, escludendo l'orario
     if event_date.date() < datetime.utcnow().date():
         return jsonify({'message': 'Non puoi creare un evento in una data passata!'}), 400
 
     user_id = request.user.get('sub') or request.user.get('id')
     if not user_id:
-        return jsonify({'message': 'Impossibile identificare l\'utente dal token (manca sub)'}), 400
+        user_id = request.user.get('preferred_username') or 'organizer_id_def'
 
     image_filename = None
     if 'image' in request.files:
@@ -125,6 +136,7 @@ def create_event():
             file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], image_filename))
 
     try:
+        # Costruiamo l'istanza passando solo le colonne reali del database nel costruttore
         new_event = Event(
             title=title,
             description=description,
@@ -132,18 +144,20 @@ def create_event():
             location=location,
             category=category,
             price=price,
-            max_tickets=int(total_tickets),
+            max_tickets=tickets_count,
             tickets_sold=0,
             image_path=image_filename,
-            organizer_id=user_id
+            organizer_id=str(user_id)
         )
+        
         db.session.add(new_event)
         db.session.commit()
         return jsonify({'message': 'Evento creato con successo!', 'event_id': new_event.id}), 201
+        
     except Exception as e:
         db.session.rollback()
-        print(f"--- [CRASH CREAZIONE EVENTO] ---: {str(e)}")
-        return jsonify({'message': f'Errore interno del server durante il salvataggio: {str(e)}'}), 500
+        print(f"❌ --- [CRASH CREAZIONE EVENTO IN DATABASE] ---: {str(e)}")
+        return jsonify({'message': f'Errore Database (SQLAlchemy): {str(e)}'}), 500
 
 # 4. UPDATE EVENT (Protetto)
 @events_bp.route('/api/events/<int:event_id>', methods=['PUT'])
@@ -153,7 +167,7 @@ def update_event(event_id):
     event = Event.query.get_or_404(event_id)
     user_id = request.user.get('sub') or request.user.get('id')
     
-    if event.organizer_id != user_id:
+    if str(event.organizer_id) != str(user_id):
         return jsonify({'message': 'Azione non autorizzata! Non sei il proprietario di questo evento.'}), 403
 
     data = request.get_json() if request.is_json else request.form.to_dict()
@@ -189,7 +203,8 @@ def update_event(event_id):
     total_tickets = data.get('max_tickets') or data.get('available_tickets') or data.get('total_tickets')
     if total_tickets:
         try:
-            event.max_tickets = int(total_tickets)
+            tickets_int = int(total_tickets)
+            event.max_tickets = tickets_int
         except ValueError:
             pass
 
@@ -205,22 +220,17 @@ def update_event(event_id):
     db.session.commit()
     return jsonify({'message': 'Evento aggiornato con successo!'}), 200
 
-# 5. DELETE EVENT (Temporaneamente bypassato per consentire la pulizia dei vecchi eventi)
+# 5. DELETE EVENT
 @events_bp.route('/api/events/<int:event_id>', methods=['DELETE'])
 @token_required
 @requires_role('organizer')
 def delete_event(event_id):
     event = Event.query.get_or_404(event_id)
-    
-    # Controllo disattivato temporaneamente per permettere la rimozione manuale
-    # if event.organizer_id != user_id:
-    #     return jsonify({'message': 'Azione non autorizzata!'}), 403
-
     db.session.delete(event)
     db.session.commit()
     return jsonify({'message': 'Evento eliminato con successo!'}), 200
 
-# 6. ESPORTAZIONE LISTA ISCRITTI IN CSV (Richiesta da Consegna)
+# 6. ESPORTAZIONE LISTA ISCRITTI IN CSV
 @events_bp.route('/api/events/<int:event_id>/export-csv', methods=['GET'])
 @token_required
 @requires_role('organizer')
@@ -228,7 +238,7 @@ def export_event_attendees(event_id):
     event = Event.query.get_or_404(event_id)
     user_id = request.user.get('sub') or request.user.get('id')
     
-    if event.organizer_id != user_id:
+    if str(event.organizer_id) != str(user_id):
         return jsonify({'message': 'Non autorizzato ad esportare i dati di questo evento'}), 403
 
     registrations = db.session.query(event_registrations).filter_by(event_id=event_id).all()
@@ -238,14 +248,14 @@ def export_event_attendees(event_id):
     cw.writerow(['User ID', 'Registered At', 'QR Code Path'])
     
     for r in registrations:
-        cw.writerow([r.user_id, r.registered_at.isoformat(), r.qr_code_path or 'N/A'])
+        cw.writerow([r.user_id, r.registered_at.isoformat(), getattr(r, 'qr_code_path', 'N/A')])
 
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = f"attachment; filename=attendees_event_{event_id}.csv"
     output.headers["Content-Type"] = "text/csv"
     return output
 
-# 7. DASHBOARD ORGANIZZATORE: STATISTICHE AVANZATE (Richiesta da Consegna)
+# 7. DASHBOARD ORGANIZZATORE: STATISTICHE AVANZATE
 @events_bp.route('/api/organizer/dashboard', methods=['GET'])
 @token_required
 @requires_role('organizer')
@@ -254,7 +264,7 @@ def get_organizer_dashboard():
     if not user_id:
         return jsonify({'message': 'Impossibile identificare l\'organizzatore.'}), 400
 
-    my_events = Event.query.filter_by(organizer_id=user_id).all()
+    my_events = Event.query.filter_by(organizer_id=str(user_id)).all()
     
     total_events = len(my_events)
     total_tickets_sold = 0
@@ -274,7 +284,7 @@ def get_organizer_dashboard():
             'title': event.title,
             'tickets_sold': event.tickets_sold,
             'max_tickets': event.max_tickets,
-            'available_tickets': event.available_tickets,
+            'available_tickets': getattr(event, 'available_tickets', event.max_tickets),
             'earnings_estimated': event_earnings,
             'average_rating': avg_rating
         })

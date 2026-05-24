@@ -1,0 +1,52 @@
+{
+  "translation": {
+    "navbar": {
+      "title": "🎉 EventHub",
+      "welcome": "Ciao, {{name}}",
+      "organizerBadge": "Organizzatore",
+      "logout": "Esci",
+      "login": "Accedi / Registrati"
+    },
+    "hero": {
+      "title": "Scopri e Gestisci i Migliori Eventi Live 🚀",
+      "description": "Benvenuto su EventHub! Se sei un appassionato, effettua l'accesso per prenotare i tuoi biglietti e recensire le tue esperienze. Se sei un organizzatore, gestisci e pubblica i tuoi eventi live in pochi clic.",
+      "cta": "Inizia Ora • Accedi o Registrati 🎟️"
+    },
+    "organizer": {
+      "panelTitle": "🛠️ Pannello Organizzatore",
+      "eventTitle": "Titolo Evento",
+      "location": "Luogo",
+      "price": "Prezzo",
+      "tickets": "Biglietti disponibile",
+      "description": "Descrizione...",
+      "submit": "Pubblica Evento Live 🚀"
+    },
+    "events": {
+      "title": "📅 Eventi Disponibili",
+      "loading": "Caricamento...",
+      "priceFree": "Gratis",
+      "ticketsLeft": "Biglietti: {{count}}",
+      "alreadyBooked": "🎟️ Già Prenotato",
+      "bookNow": "Prenota Ora",
+      "delete": "🗑️ Elimina Evento",
+      "reviews": "⭐ Recensioni",
+      "noReviews": "Nessuna recensione.",
+      "writeReview": "Scrivi un commento...",
+      "sendReview": "Invia",
+      "reviewSuccess": "⭐ Recensione aggiunta!",
+      "reviewError": "❌ Impossibile aggiungere la recensione."
+    },
+    "sidebar": {
+      "title": "🎟️ I Tuoi Biglietti",
+      "noTickets": "Non hai ancora prenotato nessun evento."
+    },
+    "alerts": {
+      "confirmDelete": "Sei sicuro di voler eliminare questo evento definitivamente?",
+      "deleteSuccess": "🗑️ Evento eliminato con successo!",
+      "deleteError": "❌ Impossibile eliminare l'evento.",
+      "bookSuccess": "🎉 Prenotazione completata!",
+      "bookError": "❌ Errore durante la prenotazione.",
+      "createSuccess": "🚀 Evento pubblicato!"
+    }
+  }
+}
