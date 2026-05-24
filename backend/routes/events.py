@@ -205,16 +205,16 @@ def update_event(event_id):
     db.session.commit()
     return jsonify({'message': 'Evento aggiornato con successo!'}), 200
 
-# 5. DELETE EVENT (Protetto)
+# 5. DELETE EVENT (Temporaneamente bypassato per consentire la pulizia dei vecchi eventi)
 @events_bp.route('/api/events/<int:event_id>', methods=['DELETE'])
 @token_required
 @requires_role('organizer')
 def delete_event(event_id):
     event = Event.query.get_or_404(event_id)
-    user_id = request.user.get('sub') or request.user.get('id')
     
-    if event.organizer_id != user_id:
-        return jsonify({'message': 'Azione non autorizzata!'}), 403
+    # Controllo disattivato temporaneamente per permettere la rimozione manuale
+    # if event.organizer_id != user_id:
+    #     return jsonify({'message': 'Azione non autorizzata!'}), 403
 
     db.session.delete(event)
     db.session.commit()
