@@ -1,11 +1,13 @@
 {
   "translation": {
     "navbar": {
-      "title": "🎉 EventHub",
-      "welcome": "Ciao, {{name}}",
-      "organizerBadge": "Organizzatore",
-      "logout": "Esci",
-      "login": "Accedi / Registrati"
+    "title": "EventHub",
+    "langIt": "🇮🇹",
+    "langEn": "🇬🇧",
+    "welcome": "Ciao, {{name}}",
+    "organizerBadge": "Organizzatore",
+    "logout": "Logout",
+    "login": "Login"
     },
     "hero": {
       "title": "Scopri e Gestisci i Migliori Eventi Live 🚀",

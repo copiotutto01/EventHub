@@ -91,7 +91,7 @@ function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBoo
         ) : (
           <div style={{ maxHeight: '120px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {reviews.map((rev) => (
-              <div key={rev.id} style={{ backgroundColor: '#f9f9f9', padding: '8px', borderRadius: '6px', fontSize: '12px' }}>
+              <div key={rev.id} className="review-item" style={{ padding: '8px', borderRadius: '6px', fontSize: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
                   <span>@{rev.username || 'Utente'}</span>
                   <span style={{ color: '#f1c40f' }}>{'⭐'.repeat(rev.rating)}</span>
@@ -130,12 +130,25 @@ function App() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [myEvents, setMyEvents] = useState([]);
+  
+  // Gestione dello stato del Tema (Scuro / Chiaro)
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
   const [newEvent, setNewEvent] = useState({ title: '', description: '', date: '', location: '', price: '', available_tickets: '' });
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
   };
+
+  // Switch del tema chiaro/scuro
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  // Effetto per salvare la scelta del tema e impostare la classe sull'elemento root
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   const loadEvents = () => {
     getEvents()
@@ -198,7 +211,6 @@ function App() {
       const parsedTickets = parseInt(newEvent.available_tickets, 10);
       const ticketsValue = isNaN(parsedTickets) ? 50 : parsedTickets;
 
-      // FORCE_BUILD: Payload pulito escludendo rigorosamente 'available_tickets'
       const eventDataToSend = {
         title: newEvent.title.trim(),
         location: newEvent.location.trim(),
@@ -243,33 +255,62 @@ function App() {
     }
   };
 
+  // Funzione di supporto per verificare in modo sicuro la lingua corrente (gestisce anche i formati 'it-IT', 'en-US')
+  const isCurrentLanguage = (lang) => {
+    return i18n.language && i18n.language.startsWith(lang);
+  };
+
   return (
-    <div className="app-container">
+    <div className={`app-container ${theme}`}>
       <nav className="navbar">
         <h1 className="logo">{t('navbar.title')}</h1>
         <div className="nav-auth">
-          <div className="lang-switcher" style={{ marginRight: '15px', display: 'flex', gap: '8px' }}>
+          <div className="lang-switcher" style={{ marginRight: '15px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {/* 🇮🇹 Bandiera Italiana Forzata */}
             <button 
               onClick={() => changeLanguage('it')} 
               style={{ 
-                background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', 
-                opacity: i18n.language === 'it' ? 1 : 0.4, transform: i18n.language === 'it' ? 'scale(1.15)' : 'scale(1)',
+                background: 'none', 
+                border: 'none', 
+                fontSize: '1.6rem', 
+                cursor: 'pointer', 
+                opacity: isCurrentLanguage('it') ? 1 : 0.4, 
+                transform: isCurrentLanguage('it') ? 'scale(1.2)' : 'scale(1)',
                 transition: 'all 0.2s' 
               }}
               title="Italiano"
             >
               🇮🇹
             </button>
+            
+            {/* 🇬🇧 Bandiera Inglese Forzata */}
             <button 
               onClick={() => changeLanguage('en')} 
               style={{ 
-                background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', 
-                opacity: i18n.language === 'en' ? 1 : 0.4, transform: i18n.language === 'en' ? 'scale(1.15)' : 'scale(1)',
+                background: 'none', 
+                border: 'none', 
+                fontSize: '1.6rem', 
+                cursor: 'pointer', 
+                opacity: isCurrentLanguage('en') ? 1 : 0.4, 
+                transform: isCurrentLanguage('en') ? 'scale(1.2)' : 'scale(1)',
                 transition: 'all 0.2s' 
               }}
               title="English"
             >
               🇬🇧
+            </button>
+
+            {/* Bottone selettore Dark/Light Mode */}
+            <button 
+              onClick={toggleTheme}
+              className="theme-toggle-btn"
+              style={{
+                background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer',
+                marginLeft: '10px', padding: '4px', transition: 'transform 0.2s'
+              }}
+              title={theme === 'light' ? 'Attiva Dark Mode' : 'Attiva Light Mode'}
+            >
+              {theme === 'light' ? '🌙' : '☀️'}
             </button>
           </div>
 
@@ -303,7 +344,7 @@ function App() {
           
           <div className="content-area">
             {isOrganizer && (
-              <section className="organizer-panel" style={{ backgroundColor: '#fcf3cf', padding: '25px', borderRadius: '12px', border: '1px solid #f39c12' }}>
+              <section className="organizer-panel">
                 <h3>{t('organizer.panelTitle')}</h3>
                 <form onSubmit={handleCreateEvent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                   <input type="text" placeholder={t('organizer.eventTitle')} value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} required />
@@ -343,7 +384,7 @@ function App() {
             <aside className="sidebar-tickets">
               <h3>{t('sidebar.title')}</h3>
               {myEvents.length === 0 ? (
-                <p style={{ color: '#7f8c8d', fontStyle: 'italic', fontSize: '0.95rem' }}>{t('sidebar.noTickets')}</p>
+                <p style={{ fontStyle: 'italic', fontSize: '0.95rem' }} className="no-tickets-text">{t('sidebar.noTickets')}</p>
               ) : (
                 myEvents.map(booked => (
                   <div key={booked.id} className="booked-event-item">

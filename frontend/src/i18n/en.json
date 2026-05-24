@@ -1,11 +1,13 @@
 {
   "translation": {
     "navbar": {
-      "title": "🎉 EventHub",
-      "welcome": "Hello, {{name}}",
-      "organizerBadge": "Organizer",
-      "logout": "Logout",
-      "login": "Login / Register"
+    "title": "EventHub",
+    "langIt": "🇮🇹",
+    "langEn": "🇬🇧",
+    "welcome": "Hello, {{name}}",
+    "organizerBadge": "Organizer",
+    "logout": "Logout",
+    "login": "Login"
     },
     "hero": {
       "title": "Discover and Manage the Best Live Events 🚀",

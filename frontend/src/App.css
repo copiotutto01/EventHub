@@ -3,6 +3,7 @@
   max-width: 1300px;
   margin: 0 auto;
   padding: 30px 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Navbar Elegante e Sospesa */
@@ -21,6 +22,7 @@
   position: sticky;
   top: 15px;
   z-index: 100;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .logo {
@@ -337,4 +339,165 @@
   margin: 4px 0 0 0;
   font-size: 0.85rem;
   color: #64748b;
+}
+
+
+/* ==========================================================================
+   STILI VARIABILI PER IL TEMA SCURO (DARK MODE)
+   ========================================================================== */
+
+/* Sfondo della pagina intera in Dark Mode */
+.app-container.dark {
+  background-color: #0f172a; /* Colore scuro profondo tailwind */
+  color: #f1f5f9;
+  min-height: 100vh;
+}
+
+/* Navbar in Dark Mode (Vetro opaco scuro) */
+.app-container.dark .navbar {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(51, 65, 85, 0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Forzatura colore bianco per i pulsanti IT e GB in Dark Mode */
+.app-container.dark .lang-switcher button {
+  color: #ffffff !important;
+}
+
+.app-container.dark .welcome-text {
+  color: #cbd5e1;
+}
+
+.app-container.dark .btn-logout {
+  background: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
+.app-container.dark .btn-logout:hover {
+  background: #7f1d1d;
+  color: #fca5a5;
+  border-color: #991b1b;
+}
+
+/* Schermata iniziale non loggati in Dark Mode */
+.app-container.dark .presentation-screen {
+  background: radial-gradient(100% 100% at 50% 0%, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0) 100%), #1e293b;
+  border-color: #334155;
+}
+
+.app-container.dark .presentation-screen h2 {
+  background: linear-gradient(135deg, #f8fafc 30%, #c7d2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.app-container.dark .presentation-screen p {
+  color: #94a3b8;
+}
+
+/* Pannello Organizzatore in Dark Mode */
+.app-container.dark .organizer-panel {
+  background-color: #2d2410 !important;
+  border-color: #b45309 !important;
+}
+
+.app-container.dark .organizer-panel h3 {
+  color: #fef3c7;
+}
+
+.app-container.dark .organizer-panel input,
+.app-container.dark .organizer-panel textarea {
+  background-color: #1e1b13;
+  border-color: #78350f;
+  color: #fff;
+}
+
+/* Sezione titoli in Dark Mode */
+.app-container.dark .events-section h3,
+.app-container.dark .sidebar-tickets h3 {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+
+/* Card Eventi in Dark Mode */
+.app-container.dark .event-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.app-container.dark .event-card:hover {
+  border-color: #475569;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.app-container.dark .event-card h4 {
+  color: #ffffff;
+}
+
+.app-container.dark .event-card .description {
+  color: #94a3b8;
+}
+
+/* Dettagli interni alle Card */
+.app-container.dark .event-details {
+  background: #0f172a;
+  border-color: #1e293b;
+  color: #cbd5e1;
+}
+
+.app-container.dark .btn-book {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.app-container.dark .btn-book:hover {
+  background: #e2e8f0;
+}
+
+/* Recensioni e Form Recensioni in Dark Mode */
+.app-container.dark .review-item {
+  background: #0f172a !important;
+  color: #e2e8f0;
+}
+
+.app-container.dark .reviews-section p {
+  color: #94a3b8 !important;
+}
+
+.app-container.dark .reviews-section select,
+.app-container.dark .reviews-section input {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: white;
+}
+
+/* Sidebar dei Biglietti a destra in Dark Mode */
+.app-container.dark .sidebar-tickets {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.app-container.dark .no-tickets-text {
+  color: #94a3b8 !important;
+}
+
+/* Biglietti acquistati individuali */
+.app-container.dark .booked-event-item {
+  background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+  border-color: #1e293b;
+}
+
+.app-container.dark .booked-event-item h4 {
+  color: #ffffff;
+}
+
+.app-container.dark .booked-event-item p {
+  color: #94a3b8;
+}
+
+/* Icona/Emojii del bottone dello Switch */
+.theme-toggle-btn:hover {
+  transform: scale(1.2);
 }
