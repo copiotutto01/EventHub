@@ -3,7 +3,6 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-# Importiamo tutto dal file delle estensioni isolato
 from extensions import db, migrate, init_celery
 
 load_dotenv()
@@ -13,7 +12,7 @@ def create_app():
     
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'super-segreta-chiave')
     
     app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'redis://eventhub_redis:6379/0')
     app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'redis://eventhub_redis:6379/0')
@@ -21,38 +20,25 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static/uploads')
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
-    # Inizializzazione database
     db.init_app(app)
     migrate.init_app(app, db)
     
-    # 🌟 CONFIGURAZIONE CORS GLOBALE E COMPLETA (Fix per Codespaces)
+    # 🌟 CONFIGURAZIONE CORS BLINDATA PER GITHUB CODESPACES
+    # Gestisce correttamente i preflight (OPTIONS) e accetta gli header di autorizzazione di Keycloak
     CORS(app, resources={
         r"/*": {
-            "origins": "*",  # Permette qualsiasi origine dinamica di Codespaces
+            "origins": "*",
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin"],
-            "supports_credentials": True
+            "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin"]
         }
     })
     
-    # Inizializzazione Celery col contesto di questa app
     init_celery(app)
-    
-    # 🌟 Intercettore GLOBALE per sbloccare le richieste OPTIONS (CORS Preflight) prima di chiunque altro
-    @app.before_request
-    def handle_global_options_requests():
-        if request.method == 'OPTIONS':
-            response = jsonify({"message": "CORS Preflight OK"})
-            response.headers.add("Access-Control-Allow-Origin", "*")
-            response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization,Access-Control-Allow-Headers")
-            response.headers.add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-            return response
     
     with app.app_context():
         from models.models import Event, Review
         db.create_all()
-        
-        # Carichiamo i Blueprint solo ora che le estensioni sono pronte
+            
         from routes.events import events_bp
         from routes.reviews import reviews_bp
         from routes.registrations import registrations_bp
@@ -61,28 +47,15 @@ def create_app():
         app.register_blueprint(reviews_bp)
         app.register_blueprint(registrations_bp)
 
-    from auth import token_required
-
     @app.route('/api/health', methods=['GET'])
     def health_check():
         return jsonify({
             "status": "healthy",
-            "message": "EventHub Backend attivo e funzionante!"
-        }), 200
-
-    @app.route('/api/protected', methods=['GET'])
-    @token_required
-    def protected_test():
-        # Adattato per usare la chiave corretta estratta dal token (es. preferred_username o username)
-        username = request.user.get('preferred_username', request.user.get('username', 'Utente'))
-        return jsonify({
-            "message": f"Ciao {username}, hai effettuato l'accesso all'area protetta!",
-            "user_info": request.user
+            "message": "Backend online!"
         }), 200
 
     return app
 
-# Istanza globale dell'applicazione Flask e Celery
 flask_app = create_app()
 from extensions import celery_app
 

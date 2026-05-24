@@ -1,17 +1,13 @@
 import os
 import jwt
 from functools import wraps
-from flask import request, jsonify
-
-# Configura l'URL di Keycloak per la validazione (puoi disattivare la verifica della firma se sei in locale/dev per semplicità)
-KEYCLOAK_PUBLIC_KEY = os.getenv('KEYCLOAK_PUBLIC_KEY', None)
+from flask import request, jsonify, make_response
 
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
         
-        # Verifica se il token è presente nell'header Authorization
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             if auth_header.startswith("Bearer "):
@@ -21,17 +17,9 @@ def token_required(f):
             return jsonify({'message': 'Token mancante!'}), 401
         
         try:
-            # Decodifichiamo il token. In modalità sviluppo saltiamo la firma se non configurata
-            if KEYCLOAK_PUBLIC_KEY:
-                # Se hai inserito la chiave pubblica nel .env
-                payload = jwt.decode(token, KEYCLOAK_PUBLIC_KEY, algorithms=['RS256'], audience='eventhub-backend')
-            else:
-                # Decodifica senza verifica della firma (comoda e sicura per ambienti di sviluppo/test isolati)
-                payload = jwt.decode(token, options={"verify_signature": False})
-            
-            # 🌟 FONDAMENTALE: Attacchiamo l'INTERO payload alla richiesta Flask
+            # Sviluppo su Codespaces: aggiungiamo una chiave vuota "" per evitare il crash interno di PyJWT
+            payload = jwt.decode(token, "", options={"verify_signature": False})
             request.user = payload
-            
         except jwt.ExpiredSignatureError:
             return jsonify({'message': 'Il token è scaduto!'}), 401
         except jwt.InvalidTokenError:
@@ -40,28 +28,40 @@ def token_required(f):
         return f(*args, **kwargs)
     return decorated
 
-
 def requires_role(required_role):
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            # Recuperiamo l'intero dizionario decodificato dal token_required
             user_data = getattr(request, 'user', None)
             if not user_data:
-                return jsonify({'message': 'Utente non autenticato o sessione non valida!'}), 401
+                return jsonify({'message': 'Utente non autenticato!'}), 401
             
-            # 🌟 Estrazione mirata per la struttura di Keycloak
+            # Estrazione sicura dei ruoli da qualsiasi mappatura possibile di Keycloak
             resource_access = user_data.get('resource_access', {})
-            backend_client = resource_access.get('eventhub-backend', {})
-            user_roles = backend_client.get('roles', [])
+            frontend_client = resource_access.get('eventhub-frontend', {})
+            user_roles = frontend_client.get('roles', [])
             
-            # Se l'utente non ha il ruolo richiesto, blocca l'operazione
-            if required_role not in user_roles:
+            realm_access = user_data.get('realm_access', {})
+            realm_roles = realm_access.get('roles', [])
+            
+            # Legge anche i campi flat aggiunti dal nostro nuovo Protocol Mapper
+            flat_roles = user_data.get('roles', [])
+            if isinstance(flat_roles, str):
+                flat_roles = [flat_roles]
+                
+            flat_role = user_data.get('role', [])
+            if isinstance(flat_role, str):
+                flat_role = [flat_role]
+            
+            # Uniamo tutte le liste di ruoli senza duplicati
+            all_user_roles = list(set(user_roles + realm_roles + flat_roles + flat_role))
+            
+            if required_role not in all_user_roles:
                 return jsonify({
-                    'message': f'Accesso negato! Questa operazione richiede il ruolo: {required_role}',
-                    'your_roles': user_roles
+                    'message': f'Accesso negato! Richiesto ruolo: {required_role}',
+                    'your_roles': all_user_roles
                 }), 403
                 
             return f(*args, **kwargs)
-        return decorator
+        return decorated
     return decorator
