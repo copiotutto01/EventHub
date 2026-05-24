@@ -193,14 +193,56 @@ function App() {
     loadEvents();
   }, []);
 
+  // 🌟 INTERCETTAZIONE RITORNO DA STRIPE DOPO PAGAMENTO
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const paymentStatus = query.get('payment_status');
+    const eventId = query.get('event_id');
+
+    if (paymentStatus === 'success' && eventId) {
+      const verifyAndRegister = async () => {
+        try {
+          // Chiamiamo il backend per dirgli di convalidare l'acquisto nel database
+          await axios.post(`${FIXED_BACKEND_URL}/api/events/${eventId}/confirm-payment`, {}, {
+            headers: { Authorization: `Bearer ${keycloak.token}` }
+          });
+          alert("Pagamento ricevuto! Il tuo biglietto è stato registrato con successo.");
+          // Pulisce i parametri dall'indirizzo URL del browser
+          window.history.replaceState({}, document.title, window.location.pathname);
+          loadEvents();
+          loadMyEvents();
+        } catch (err) {
+          console.error("Errore convalida pagamento:", err);
+        }
+      };
+      
+      // Esegui la convalida solo se il token Keycloak è pronto ed autenticato
+      if (keycloak.token) {
+        verifyAndRegister();
+      }
+    } else if (paymentStatus === 'cancel') {
+      alert("Pagamento annullato. Nessun biglietto è stato acquistato.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [isLogged, events]); // Monitora lo stato di login e il caricamento eventi
+
+  // 🌟 PRENOTAZIONE AGGIORNATA CON REINDIRIZZAMENTO DIRETTO A STRIPE CHECKOUT
   const handleBookEvent = async (eventId) => {
     try {
-      await bookEvent(eventId);
-      alert(t('alerts.bookSuccess'));
-      loadEvents();
-      loadMyEvents();
+      const data = await bookEvent(eventId);
+      
+      // Se l'evento richiede Stripe, andiamo sulla pagina di pagamento sicura
+      if (data.requires_stripe && data.url) {
+        window.location.href = data.url; 
+      } else {
+        // Se l'evento era gratuito (0€), il backend lo ha salvato direttamente
+        alert(t('alerts.bookSuccess'));
+        loadEvents();
+        loadMyEvents();
+      }
     } catch (error) {
-      alert(t('alerts.bookError'));
+      const errMsg = error.response?.data?.message || t('alerts.bookError');
+      alert(errMsg);
     }
   };
 

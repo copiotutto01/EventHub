@@ -2,10 +2,14 @@ import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
+import stripe
 
 from extensions import db, migrate, init_celery
 
 load_dotenv()
+
+# Inizializzazione Stripe con la chiave segreta dal file .env
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 def create_app():
     app = Flask(__name__)

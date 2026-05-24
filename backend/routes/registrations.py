@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 import secrets
+import os
+import stripe
 
 from extensions import db
 from models.models import Event, event_registrations
@@ -8,24 +10,23 @@ from tasks import send_email_notification
 
 registrations_bp = Blueprint('registrations', __name__)
 
-# 1. ISCRIVITI A UN EVENTO (Protetto)
-@registrations_bp.route('/api/events/<int:event_id>/register', methods=['POST'])
+# 1. CREA SESSIONE DI CHECKOUT STRIPE O REGISTRA SE GRATUITO
+@registrations_bp.route('/api/events/<int:event_id>/checkout', methods=['POST'])
 @token_required
-def register_to_event(event_id):
+def create_checkout_session(event_id):
     event = Event.query.get_or_404(event_id)
     
-    # Estrazione e sanificazione dell'ID utente da Keycloak (forzato a stringa pulita)
     raw_user_id = request.user.get('sub') or request.user.get('id') or request.user.get('preferred_username')
     if not raw_user_id:
         return jsonify({'message': 'Impossibile identificare l\'utente dal token.'}), 400
     
     user_id = str(raw_user_id).strip()
-    user_email = request.user.get('email', 'utente@eventhub.local')
-
-    # Controllo sicuro dei biglietti basato sulle colonne fisiche del DB
+    
+    # Controllo disponibilità biglietti
     if (event.max_tickets - event.tickets_sold) <= 0:
         return jsonify({'message': 'Spiacenti, i biglietti per questo evento sono esauriti!'}), 400
 
+    # Controllo se già iscritto
     is_already_registered = db.session.query(event_registrations).filter_by(
         user_id=user_id, 
         event_id=event_id
@@ -34,44 +35,105 @@ def register_to_event(event_id):
     if is_already_registered:
         return jsonify({'message': 'Sei già iscritto a questo evento!'}), 400
 
+    # SE L'EVENTO È GRATUITO: Registrazione diretta senza passare da Stripe
+    if float(event.price) <= 0:
+        return register_user_logic(user_id, event, request.user.get('email', 'utente@eventhub.local'))
+
+    # SE L'EVENTO È A PAGAMENTO: Crea la sessione di Stripe Checkout
     try:
-        # Generiamo una stringa fittizia univoca per simulare il percorso del QR Code richiesto
+        # Recupera l'origin del frontend per i reindirizzamenti (successo/annullamento)
+        frontend_url = request.headers.get('Origin', 'https://localhost:3000')
+        
+        # Stripe vuole il prezzo espresso in centesimi di euro (es: 10.50 € diventa 1050)
+        amount_in_cents = int(float(event.price) * 100)
+
+        session = stripe.checkout.sessions.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'eur',
+                    'product_data': {
+                        'name': f"Biglietto: {event.title}",
+                        'description': f"Ingresso per {event.title} presso {event.location}",
+                    },
+                    'unit_amount': amount_in_cents,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            # Passiamo l'id utente nei metadata per recuperarlo dopo il pagamento
+            metadata={
+                'user_id': user_id,
+                'event_id': event_id,
+                'user_email': request.user.get('email', 'utente@eventhub.local')
+            },
+            success_url=f"{frontend_url}?payment_status=success&event_id={event_id}",
+            cancel_url=f"{frontend_url}?payment_status=cancel",
+        )
+        
+        return jsonify({'id': session.id, 'url': session.url, 'requires_stripe': True}), 200
+
+    except Exception as e:
+        print(f"--- [ERRORE STRIPE STRIPE] ---: {str(e)}")
+        return jsonify({'message': f"Errore nella creazione del pagamento: {str(e)}"}), 500
+
+
+# 2. CONFERMA REGISTRAZIONE DOPO IL PAGAMENTO STRIPE AVVENUTO CON SUCCESSO
+@registrations_bp.route('/api/events/<int:event_id>/confirm-payment', methods=['POST'])
+@token_required
+def confirm_payment(event_id):
+    event = Event.query.get_or_404(event_id)
+    raw_user_id = request.user.get('sub') or request.user.get('id') or request.user.get('preferred_username')
+    user_id = str(raw_user_id).strip()
+    user_email = request.user.get('email', 'utente@eventhub.local')
+
+    # Controlla se l'utente è già stato inserito (evita duplicati se aggiorna la pagina)
+    is_already_registered = db.session.query(event_registrations).filter_by(
+        user_id=user_id, 
+        event_id=event_id
+    ).first() is not None
+
+    if is_already_registered:
+        return jsonify({'message': 'Pagamento già confermato e registrato!'}), 200
+
+    return register_user_logic(user_id, event, user_email)
+
+
+# Funzione di utilità riutilizzabile per scrivere nel DB
+def register_user_logic(user_id, event, user_email):
+    try:
         mock_qr_token = secrets.token_hex(16)
-        mock_qr_path = f"/static/qrcodes/qr_{user_id}_{event_id}_{mock_qr_token}.png"
+        mock_qr_path = f"/static/qrcodes/qr_{user_id}_{event.id}_{mock_qr_token}.png"
 
         statement = event_registrations.insert().values(
             user_id=user_id, 
-            event_id=event_id,
+            event_id=event.id,
             qr_code_path=mock_qr_path
         )
         db.session.execute(statement)
 
-        # Incrementiamo il contatore fisico dei biglietti venduti
         event.tickets_sold = event.tickets_sold + 1
         db.session.commit()
 
-        # Invocazione asincrona sicura Celery
         try:
             send_email_notification.delay(user_email, event.title)
         except Exception as celery_err:
             print(f"--- [CELERY WARN] ---: Impossibile inviare l'email: {celery_err}")
 
-        # Calcoliamo i biglietti rimasti matematicamente per evitare letture di proprietà instabili in risposta
         tickets_left = event.max_tickets - event.tickets_sold
 
         return jsonify({
-            'message': 'Iscrizione completata con successo! Riceverai una mail di conferma a breve.',
+            'message': 'Iscrizione completata con successo! Il tuo pagamento è stato elaborato.',
             'available_tickets_left': tickets_left,
-            'qr_code_path': mock_qr_path
+            'qr_code_path': mock_qr_path,
+            'requires_stripe': False
         }), 201
-
     except Exception as e:
         db.session.rollback()
-        print(f"--- [ERRORE REGISTRAZIONE] ---: {str(e)}")
-        return jsonify({'message': f"Errore durante l'iscrizione: {str(e)}"}), 500
+        return jsonify({'message': f"Errore durante il salvataggio: {str(e)}"}), 500
 
 
-# 2. VEDI I TUOI EVENTI ISCRITTI (Protetto - Con estrazione dati QR Code per i biglietti dell'utente)
+# 3. VEDI I TUOI EVENTI ISCRITTI
 @registrations_bp.route('/api/users/me/events', methods=['GET'])
 @token_required
 def get_my_events():
@@ -81,7 +143,6 @@ def get_my_events():
     
     user_id = str(raw_user_id).strip()
     
-    # Eseguiamo una join esplicita per recuperare i campi aggiuntivi della tabella di mezzo (es. qr_code_path)
     results = db.session.query(Event, event_registrations.c.qr_code_path, event_registrations.c.registered_at).join(
         event_registrations, (event_registrations.c.event_id == Event.id)
     ).filter(event_registrations.c.user_id == user_id).all()
