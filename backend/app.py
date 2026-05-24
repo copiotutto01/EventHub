@@ -24,10 +24,29 @@ def create_app():
     # Inizializzazione database
     db.init_app(app)
     migrate.init_app(app, db)
-    CORS(app)
+    
+    # 🌟 CONFIGURAZIONE CORS GLOBALE E COMPLETA (Fix per Codespaces)
+    CORS(app, resources={
+        r"/*": {
+            "origins": "*",  # Permette qualsiasi origine dinamica di Codespaces
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin"],
+            "supports_credentials": True
+        }
+    })
     
     # Inizializzazione Celery col contesto di questa app
     init_celery(app)
+    
+    # 🌟 Intercettore GLOBALE per sbloccare le richieste OPTIONS (CORS Preflight) prima di chiunque altro
+    @app.before_request
+    def handle_global_options_requests():
+        if request.method == 'OPTIONS':
+            response = jsonify({"message": "CORS Preflight OK"})
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization,Access-Control-Allow-Headers")
+            response.headers.add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+            return response
     
     with app.app_context():
         from models.models import Event, Review
@@ -54,15 +73,18 @@ def create_app():
     @app.route('/api/protected', methods=['GET'])
     @token_required
     def protected_test():
+        # Adattato per usare la chiave corretta estratta dal token (es. preferred_username o username)
+        username = request.user.get('preferred_username', request.user.get('username', 'Utente'))
         return jsonify({
-            "message": f"Ciao {request.user['username']}, hai effettuato l'accesso all'area protetta!",
+            "message": f"Ciao {username}, hai effettuato l'accesso all'area protetta!",
             "user_info": request.user
         }), 200
 
     return app
 
-# Istanza globale dell'applicazione Flask
+# Istanza globale dell'applicazione Flask e Celery
 flask_app = create_app()
+from extensions import celery_app
 
 if __name__ == '__main__':
     flask_app.run(host='0.0.0.0', port=5000, debug=True)

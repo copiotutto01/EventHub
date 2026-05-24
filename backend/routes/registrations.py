@@ -14,7 +14,7 @@ def register_to_event(event_id):
     user_id = request.user['id']
     user_email = request.user.get('email', 'utente@eventhub.local')
 
-    # Controlla se ci sono ancora biglietti disponibili
+    # Controlla se ci sono ancora biglietti disponibili usando la property
     if event.available_tickets <= 0:
         return jsonify({'message': 'Spiacenti, i biglietti per questo evento sono esauriti!'}), 400
 
@@ -32,14 +32,17 @@ def register_to_event(event_id):
         statement = event_registrations.insert().values(user_id=user_id, event_id=event_id)
         db.session.execute(statement)
 
-        # 2. Scala un biglietto dalla disponibilità dell'evento
-        event.available_tickets -= 1
+        # Incrementiamo la colonna reale del DB anziché modificare la property in sola lettura
+        event.tickets_sold += 1
         
         db.session.commit()
 
         # 3. LANCIAMO IL TASK CELERY IN BACKGROUND!
-        # Usiamo .delay() per metterlo in coda su Redis senza bloccare la risposta HTTP dell'utente
-        send_email_notification.delay(user_email, event.title)
+        try:
+            send_email_notification.delay(user_email, event.title)
+        except Exception as celery_err:
+            # Logghiamo l'errore di Celery ma non blocchiamo l'acquisto dell'utente se Redis ha problemi
+            print(f"--- [CELERY WARN] ---: Impossibile inviare l'email: {celery_err}")
 
         return jsonify({
             'message': 'Iscrizione completata con successo! Riceverai una mail di conferma a breve.',
@@ -48,6 +51,7 @@ def register_to_event(event_id):
 
     except Exception as e:
         db.session.rollback()
+        print(f"--- [ERRORE REGISTRAZIONE] ---: {str(e)}")
         return jsonify({'message': f"Errore durante l'iscrizione: {str(e)}"}), 500
 
 
