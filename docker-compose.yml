@@ -11,8 +11,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_API_URL=http://localhost:5000
-      - VITE_KEYCLOAK_URL=http://localhost:8080
+      - VITE_API_URL=https://symmetrical-fishstick-4jxj6vp7qq5wc7wp-5000.app.github.dev
+      - VITE_KEYCLOAK_URL=https://symmetrical-fishstick-4jxj6vp7qq5wc7wp-8080.app.github.dev
     depends_on:
       - backend
     networks:
