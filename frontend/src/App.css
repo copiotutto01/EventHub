@@ -1,251 +1,230 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+/* Layout Generale dell'Applicazione */
+.app-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+/* Navbar Elegante e Sospesa */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(241, 245, 249, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+  margin-bottom: 40px;
+  position: sticky;
+  top: 15px;
+  z-index: 100;
+}
+
+.logo {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.nav-auth {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.welcome-text {
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+/* Pulsanti Professionali */
+.btn-login {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+  transition: all 0.25s ease;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+}
+
+.btn-logout {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+/* ==========================================================================
+   HERO SECTION (Schermata Iniziale NON Loggati)
+   ========================================================================== */
+.presentation-screen {
+  background: radial-gradient(100% 100% at 50% 0%, rgba(99, 102, 241, 0.05) 0%, rgba(255, 255, 255, 0) 100%), white;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.presentation-screen h2 {
+  font-weight: 850;
+  letter-spacing: -1.5px;
+  background: linear-gradient(135deg, #0f172a 30%, #312e81 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ==========================================================================
+   LAYOUT PRINCIPALE (Utenti Loggati)
+   ========================================================================== */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
   }
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#center {
+.content-area {
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  gap: 40px;
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+/* Pannello di Controllo dell'Organizzatore */
+.organizer-panel {
+  box-shadow: 0 10px 25px rgba(217, 119, 6, 0.08) !important;
+  border: 1px solid #fde68a !important;
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
-  position: relative;
-  width: 100%;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
-
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
-}
-.events-section {
-  margin-top: 40px;
-  text-align: left;
-}
-
-.events-section h3 {
-  font-size: 1.8rem;
-  color: #333;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
+.organizer-panel h3 {
+  margin-top: 0;
   margin-bottom: 20px;
+  font-size: 1.3rem;
+  color: #78350f;
+}
+
+.organizer-panel input, 
+.organizer-panel textarea, 
+.organizer-panel select {
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.organizer-panel input:focus, 
+.organizer-panel textarea:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+}
+
+/* Sezione Lista Eventi */
+.events-section h3 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1e293b;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 12px;
+  margin-bottom: 24px;
 }
 
 .events-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 25px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 28px;
 }
 
+/* Premium Card Evento */
 .event-card {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  border: 1px solid #eef2f3;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+  border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  transition: transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .event-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
 }
 
 .event-card h4 {
-  margin: 0 0 10px 0;
-  font-size: 1.4rem;
-  color: #2c3e50;
+  margin: 0 0 12px 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
 }
 
 .event-card .description {
-  color: #666;
+  color: #475569;
   font-size: 0.95rem;
-  line-height: 1.4;
-  margin-bottom: 15px;
+  line-height: 1.5;
+  margin-bottom: 20px;
 }
 
+/* Badge ed Informazioni Evento Interni */
 .event-details {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   font-size: 0.9rem;
-  color: #555;
-  background: #f8f9fa;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 15px;
+  color: #334155;
+  background: #f8fafc;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #f1f5f9;
+}
+
+.event-details span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .event-details .price {
-  font-weight: bold;
-  color: #2ecc71;
+  font-weight: 700;
+  color: #059669;
+  font-size: 1rem;
 }
 
 .card-footer {
@@ -253,24 +232,109 @@
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
+  padding-top: 15px;
 }
 
 .tickets {
   font-size: 0.85rem;
-  color: #e74c3c;
-  font-weight: 500;
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
 }
 
+/* Pulsanti All'interno delle Card */
 .btn-book {
-  background: #3498db;
+  background: #0f172a;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
 .btn-book:hover {
-  background: #2980b9;
+  background: #1e293b;
+  transform: scale(1.02);
+}
+
+.btn-delete {
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+  background-color: #c0392b !important;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.35);
+}
+
+/* Sezione Recensioni Modellate */
+.reviews-section input {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.reviews-section select {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+/* ==========================================================================
+   SIDEBAR DESTRA (I Miei Biglietti)
+   ========================================================================== */
+.sidebar-tickets {
+  background: white;
+  padding: 26px;
+  border-radius: 18px;
+  box-shadow: 0 4px 25px rgba(15, 23, 42, 0.02);
+  border: 1px solid #e2e8f0;
+  position: sticky;
+  top: 100px;
+}
+
+.sidebar-tickets h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 12px;
+}
+
+.booked-event-item {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #4f46e5;
+  transition: transform 0.2s ease;
+}
+
+.booked-event-item:hover {
+  transform: translateX(4px);
+}
+
+.booked-event-item h4 {
+  margin: 0 0 6px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.booked-event-item p {
+  margin: 4px 0 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
 }

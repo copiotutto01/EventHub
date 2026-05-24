@@ -1,4 +1,5 @@
 import Keycloak from 'keycloak-js';
+import axios from 'axios';
 
 const keycloakConfig = {
   url: 'https://symmetrical-fishstick-4jxj6vp7qq5wc7wp-8080.app.github.dev', 
@@ -11,31 +12,45 @@ const keycloak = new Keycloak(keycloakConfig);
 export const initKeycloak = (onAuthenticatedCallback) => {
   keycloak
     .init({
-      // Usiamo 'on-load' standard senza sso silente per evitare blocchi sui cookie di terze parti
       onLoad: 'check-sso',
-      checkLoginIframe: false,
+      checkLoginIframe: false,             // 🌟 FONDAMENTALE: Disattiva l'iframe che va in timeout
       pkceMethod: 'S256',
-      flow: 'standard'
+      flow: 'standard',
+      enableLogging: true
     })
     .then((authenticated) => {
-      console.log('[KEYCLOAK] Risultato inizializzazione. Autenticato:', authenticated);
-      
+      console.log('[KEYCLOAK] Inizializzato con successo. Autenticato:', authenticated);
       if (authenticated) {
-        console.log('[KEYCLOAK] Token valido ottenuto:', keycloak.token);
-        // Memorizziamo il token a livello globale per renderlo accessibile ad Axios
         window.token = keycloak.token;
         window.authenticated = true;
+        axios.defaults.headers.common['Authorization'] = `Bearer ${keycloak.token}`;
       } else {
-        console.warn('[KEYCLOAK] Inizializzato ma l\'utente non è autenticato.');
         window.authenticated = false;
+        delete axios.defaults.headers.common['Authorization'];
       }
       onAuthenticatedCallback();
     })
     .catch((err) => {
-      console.error('[KEYCLOAK] Errore critico di inizializzazione:', err);
+      console.error('[KEYCLOAK] Errore inizializzazione:', err);
       window.authenticated = false;
       onAuthenticatedCallback(); 
     });
 };
+
+axios.interceptors.request.use(
+  async (config) => {
+    if (keycloak.token) {
+      try {
+        await keycloak.updateToken(30);
+        config.headers['Authorization'] = `Bearer ${keycloak.token}`;
+        window.token = keycloak.token;
+      } catch (error) {
+        console.error('[KEYCLOAK] Errore aggiornamento token:', error);
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default keycloak;

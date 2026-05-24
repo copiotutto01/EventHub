@@ -1,0 +1,75 @@
+{
+  "id": "eventhub",
+  "realm": "eventhub",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "organizer",
+        "description": "Organizzatore di eventi"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "eventhub-frontend",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "realm roles mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "realm roles resource mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "role",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "marco",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Marco",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "organizer"
+      ]
+    }
+  ]
+}
