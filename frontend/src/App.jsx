@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import keycloak from './auth/keycloak';
 import { getEvents, bookEvent } from './services/eventService';
@@ -226,64 +226,56 @@ function App() {
   };
 
   useEffect(() => {
-    if (window.authenticated || keycloak.authenticated) {
-      setIsLogged(true);
-      setUserData({
-        name: keycloak.tokenParsed?.preferred_username || 'Utente',
-        id: keycloak.tokenParsed?.sub
-      });
+    const initKeycloakAndHandlePayment = async () => {
+      if (window.authenticated || keycloak.authenticated) {
+        const token = keycloak.token;
+        if (!token) return;
 
-      const clientRoles = keycloak.tokenParsed?.resource_access?.['eventhub-frontend']?.roles || [];
-      const realmRoles = keycloak.tokenParsed?.realm_access?.roles || [];
-      if (clientRoles.includes('organizer') || realmRoles.includes('organizer')) {
-        setIsOrganizer(true);
-      }
+        setIsLogged(true);
+        setUserData({
+          name: keycloak.tokenParsed?.preferred_username || 'Utente',
+          id: keycloak.tokenParsed?.sub
+        });
 
-      loadMyEvents();
-    }
-    loadEvents();
-  }, []);
+        const clientRoles = keycloak.tokenParsed?.resource_access?.['eventhub-frontend']?.roles || [];
+        const realmRoles = keycloak.tokenParsed?.realm_access?.roles || [];
+        if (clientRoles.includes('organizer') || realmRoles.includes('organizer')) {
+          setIsOrganizer(true);
+        }
 
-  // 🌟 INTERCETTAZIONE RITORNO DA STRIPE DOPO PAGAMENTO
-  useEffect(() => {
-  const query = new URLSearchParams(window.location.search);
-  const paymentStatus = query.get('payment_status');
-  const eventId = query.get('event_id');
-
-  if (!keycloak.token) return;
-
-  if (paymentStatus === 'success' && eventId) {
-    axios.post(`${FIXED_BACKEND_URL}/api/events/${eventId}/confirm-payment`, {}, {
-      headers: { Authorization: `Bearer ${keycloak.token}` }
-    }).then(() => {
-      alert(t('alerts.paymentSuccess'));
-      window.history.replaceState({}, document.title, window.location.pathname);
-      loadEvents();
-      loadMyEvents();
-    }).catch(console.error);
-  }
-
-  if (paymentStatus === 'cancel') {
-    alert(t('alerts.paymentCancelled'));
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-}, [isLogged]);
-
-  const handleBookEvent = async (eventId) => {
-    try {
-      const data = await bookEvent(eventId);
-      if (data.requires_stripe && data.url) {
-        window.location.href = data.url; 
-      } else {
-        alert(t('alerts.bookSuccess'));
-        loadEvents();
         loadMyEvents();
+
+        // Gestisci il ritorno da Stripe QUI, dove il token è certamente disponibile
+        const query = new URLSearchParams(window.location.search);
+        const paymentStatus = query.get('payment_status');
+        const eventId = query.get('event_id');
+
+        if (paymentStatus === 'success' && eventId) {
+          // Pulisci l'URL subito per evitare doppia esecuzione
+          window.history.replaceState({}, document.title, window.location.pathname);
+          try {
+            await axios.post(
+              `${FIXED_BACKEND_URL}/api/events/${eventId}/confirm-payment`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            alert(t('alerts.paymentSuccess'));
+            loadEvents();
+            loadMyEvents();
+          } catch (err) {
+            console.error(err);
+          }
+        } else if (paymentStatus === 'cancel') {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          alert(t('alerts.paymentCancelled'));
+        }
       }
-    } catch (error) {
-      const errMsg = error.response?.data?.message || t('alerts.bookError');
-      alert(errMsg);
-    }
-  };
+
+      loadEvents();
+    };
+
+    initKeycloakAndHandlePayment();
+  }, []); // solo al mount — [] invece di [isLogged]
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
@@ -331,6 +323,22 @@ function App() {
     } catch (error) {
       console.error("Errore durante l'eliminazione:", error);
       alert(t('alerts.deleteError'));
+    }
+  };
+
+  const handleBookEvent = async (eventId) => {
+    try {
+      const data = await bookEvent(eventId);
+      if (data.requires_stripe && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(t('alerts.bookSuccess'));
+        loadEvents();
+        loadMyEvents();
+      }
+    } catch (error) {
+      const errMsg = error.response?.data?.message || t('alerts.bookError');
+      alert(errMsg);
     }
   };
 

@@ -47,7 +47,7 @@ def create_checkout_session(event_id):
         # Stripe vuole il prezzo espresso in centesimi di euro (es: 10.50 € diventa 1050)
         amount_in_cents = int(float(event.price) * 100)
 
-        session = stripe.checkout.sessions.create(
+        session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
                 'price_data': {
