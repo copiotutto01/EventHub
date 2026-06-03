@@ -1,19 +1,151 @@
+/* ============================================================================
+   PALETTE COLORI PROFESSIONALE E MODERNA
+   ============================================================================ */
 :root {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Colori Primari - Blu Profondo Moderno */
+  --color-primary: #4f46e5;
+  --color-primary-dark: #4338ca;
+  --color-primary-light: #6366f1;
+  
+  /* Colori Secondari - Verde Accento */
+  --color-success: #10b981;
+  --color-success-light: #d1fae5;
+  --color-success-dark: #059669;
+  
+  /* Colori di Allarme e Attenzione */
+  --color-warning: #f59e0b;
+  --color-warning-light: #fef3c7;
+  --color-danger: #ef4444;
+  --color-danger-light: #fee2e2;
+  
+  /* Colori Neutri Sofisticati */
+  --color-dark: #0f172a;
+  --color-dark-secondary: #1e293b;
+  --color-dark-tertiary: #334155;
+  --color-light: #f8fafc;
+  --color-light-secondary: #f1f5f9;
+  --color-light-tertiary: #e2e8f0;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-tertiary: #94a3b8;
+  --color-border: #e2e8f0;
+  
+  /* Colori per Dark Mode */
+  --color-dark-bg: #0f172a;
+  --color-dark-card: #1e293b;
+  --color-dark-border: #334155;
+  
+  /* Font Stack Moderno */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   line-height: 1.6;
   font-weight: 400;
-  background-color: #f8fafc; /* Grigio chiarissimo ultra-moderno */
-  color: #0f172a; /* Slate scuro per massima leggibilità */
+  background-color: var(--color-light);
+  color: var(--color-text);
+}
+
+/* ============================================================================
+   RESET GLOBALE
+   ============================================================================ */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
 }
 
 body {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
   min-height: 100vh;
   width: 100%;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-*, *::before, *::after {
-  box-sizing: inherit;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   TIPOGRAFIA BASE
+   ============================================================================ */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.1rem; }
+h6 { font-size: 1rem; }
+
+p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}
+
+/* ============================================================================
+   ELEMENTI DI FORMA BASE
+   ============================================================================ */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+input,
+textarea,
+select {
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background-color: white;
+  color: var(--color-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* ============================================================================
+   BOTTONI BASE
+   ============================================================================ */
+button {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  border-radius: 10px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

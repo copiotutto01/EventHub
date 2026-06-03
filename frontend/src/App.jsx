@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import keycloak from './auth/keycloak';
 import { getEvents, bookEvent } from './services/eventService';
 import axios from 'axios';
 import './App.css';
 
-// URL aggiornato sulla porta 5001 funzionante
-const FIXED_BACKEND_URL = 'https://symmetrical-fishstick-4jxj6vp7qq5wc7wp-5001.app.github.dev';
+// URL aggiornato sulla porta 5000, che è la porta esposta dal backend nel container
+const FIXED_BACKEND_URL = 'https://silver-space-meme-pj7rjj94jw5g39w66-5000.app.github.dev/';
 
 // Funzione di supporto per generare un badge di categoria colorato ed estetico
 const getCategoryStyle = (category) => {
@@ -26,7 +26,7 @@ const getCategoryStyle = (category) => {
   }
 };
 
-function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBookEvent, handleDeleteEvent, token }) {
+function EventCard({ event, isLogged, isOrganizer, myEvents, handleBookEvent, handleDeleteEvent, token }) {
   const { t } = useTranslation();
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(5);
@@ -72,98 +72,45 @@ function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBoo
   const statusColor = tLeft === 0 ? '#ef4444' : tLeft < 15 ? '#f59e0b' : '#10b981';
 
   return (
-    <div className="event-card" style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: '12px',
-      padding: '20px',
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-      border: '1px solid rgba(0,0,0,0.05)',
-      position: 'relative',
-      transition: 'transform 0.2s, box-shadow 0.2s'
-    }}>
+    <div className="event-card">
       
       {/* Badge della Categoria e Stato Biglietti */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ 
-          padding: '4px 10px', 
-          borderRadius: '20px', 
-          fontSize: '11px', 
-          fontWeight: 'bold',
-          textTransform: 'uppercase',
-          ...getCategoryStyle(event.category)
-        }}>
-          {event.category || 'Generico'}
+      <div className="badge-container">
+        <span className="category-badge" style={getCategoryStyle(event.category)}>
+          {event.category || t('organizer.categoryGeneric')}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#6b7280' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: statusColor, display: 'inline-block' }}></span>
-          {tLeft === 0 ? 'Esaurito' : tLeft < 15 ? 'Ultimi rimasti!' : 'Disponibile'}
+        <div className="status-indicator">
+          <span className="status-dot" style={{ backgroundColor: statusColor }}></span>
+          {tLeft === 0 ? t('events.soldOut') : tLeft < 15 ? t('events.limitedTickets') : t('events.available')}
         </div>
       </div>
 
-      <h4 style={{ margin: '4px 0 0 0', fontSize: '1.25rem', fontWeight: '700', color: 'inherit' }}>{event.title}</h4>
+      <h4>{event.title}</h4>
       
-      <p className="description" style={{ margin: '0', fontSize: '0.9rem', color: '#4b5563', lineHeight: '1.4', flexGrow: 1 }}>
-        {event.description}
-      </p>
+      <p className="description">{event.description}</p>
       
-      <div className="event-details" style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: '6px', 
-        fontSize: '0.85rem', 
-        backgroundColor: 'rgba(0,0,0,0.02)', 
-        padding: '10px', 
-        borderRadius: '8px' 
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📍 <span>{event.location}</span></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📅 <span>{new Date(event.date).toLocaleDateString()}</span></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-          💰 <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: event.price === 0 ? '#10b981' : 'inherit' }}>
+      <div className="event-details">
+        <span>📍 {event.location}</span>
+        <span>📅 {new Date(event.date).toLocaleDateString()}</span>
+        <span style={{ marginTop: '4px' }}>
+          💰 <span className="price">
             {event.price === 0 ? t('events.priceFree') : `${Number(event.price).toFixed(2)} €`}
           </span>
-        </div>
+        </span>
       </div>
 
-      <div className="card-footer" style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginTop: '8px',
-        borderTop: '1px solid rgba(0,0,0,0.05)',
-        paddingTop: '12px'
-      }}>
+      <div className="card-footer">
         <span className="tickets" style={{ fontSize: '0.85rem', fontWeight: '500' }}>
           🎫 {t('events.ticketsLeft', { count: tLeft })}
         </span>
         
         {isLogged && !isOrganizer && (
           myEvents.some(booked => booked.id === event.id) ? (
-            <button className="btn-book" disabled style={{ 
-              backgroundColor: '#e5e7eb', 
-              color: '#9ca3af', 
-              cursor: 'not-allowed',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              fontWeight: '600',
-              fontSize: '0.85rem'
-            }}>
+            <button className="btn-book" disabled>
               {t('events.alreadyBooked')}
             </button>
           ) : (
-            <button className="btn-book" onClick={() => handleBookEvent(event.id)} style={{
-              backgroundColor: '#4f46e5',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              fontWeight: '600',
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)'
-            }}>
+            <button className="btn-book" onClick={() => handleBookEvent(event.id)}>
               {t('events.bookNow')}
             </button>
           )
@@ -172,75 +119,52 @@ function EventCard({ event, isLogged, isOrganizer, userData, myEvents, handleBoo
         {isOwner && (
           <button 
             className="btn-delete" 
-            onClick={() => handleDeleteEvent(event.id)} 
-            style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '8px 14px', cursor: 'pointer', borderRadius: '6px', fontWeight: '600', fontSize: '0.85rem' }}
+            onClick={() => handleDeleteEvent(event.id)}
           >
             {t('events.delete')}
           </button>
         )}
       </div>
 
-      {/* Sezione Recensioni Abbellita */}
-      <div className="reviews-section" style={{ marginTop: '10px', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '12px' }}>
-        <h5 style={{ margin: '0 0 10px 0', fontSize: '0.9rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {/* Sezione Recensioni */}
+      <div className="reviews-section">
+        <h5>
           💬 {t('events.reviews')} <span style={{ fontSize: '0.8rem', color: '#9ca3af', fontWeight: 'normal' }}>({reviews.length})</span>
         </h5>
         
         {reviews.length === 0 ? (
-          <p style={{ fontSize: '0.8rem', color: '#9ca3af', fontStyle: 'italic', margin: '4px 0' }}>{t('events.noReviews')}</p>
+          <p className="no-reviews-text">{t('events.noReviews')}</p>
         ) : (
-          <div style={{ maxHeight: '130px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+          <div className="reviews-list">
             {reviews.map((rev) => (
-              <div key={rev.id} className="review-item" style={{ 
-                padding: '10px', 
-                borderRadius: '8px', 
-                fontSize: '0.8rem',
-                backgroundColor: 'rgba(0,0,0,0.015)',
-                border: '1px solid rgba(0,0,0,0.03)'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '4px' }}>
-                  <span style={{ color: '#4f46e5' }}>@{rev.username || 'Utente'}</span>
-                  <span style={{ letterSpacing: '1px' }}>{'⭐'.repeat(rev.rating)}</span>
+              <div key={rev.id} className="review-item">
+                <div className="review-item-header">
+                  <span className="review-username">@{rev.username || 'Utente'}</span>
+                  <span className="review-rating">{'⭐'.repeat(rev.rating)}</span>
                 </div>
-                <p style={{ margin: '0', color: '#4b5563', lineHeight: '1.3' }}>{rev.comment}</p>
+                <p className="review-comment">{rev.comment}</p>
               </div>
             ))}
           </div>
         )}
 
         {isLogged && !isOrganizer && (
-          <form onSubmit={handleAddReview} style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
-            <select value={rating} onChange={(e) => setRating(e.target.value)} style={{ 
-              padding: '6px', 
-              borderRadius: '6px', 
-              border: '1px solid #d1d5db', 
-              fontSize: '0.8rem',
-              backgroundColor: '#fff'
-            }}>
+          <form onSubmit={handleAddReview} className="review-form">
+            <select value={rating} onChange={(e) => setRating(e.target.value)}>
               <option value="5">⭐⭐⭐⭐⭐ (5)</option>
               <option value="4">⭐⭐⭐⭐ (4)</option>
               <option value="3">⭐⭐⭐ (3)</option>
               <option value="2">⭐⭐ (2)</option>
               <option value="1">⭐ (1)</option>
             </select>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div className="review-form-group">
               <input 
                 type="text" 
                 placeholder={t('events.writeReview')} 
                 value={comment} 
-                onChange={(e) => setComment(e.target.value)} 
-                style={{ flex: 1, padding: '8px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid #d1d5db' }} 
+                onChange={(e) => setComment(e.target.value)}
               />
-              <button type="submit" style={{ 
-                backgroundColor: '#10b981', 
-                color: '#fff', 
-                border: 'none', 
-                padding: '0 14px', 
-                cursor: 'pointer', 
-                borderRadius: '6px',
-                fontWeight: '600',
-                fontSize: '0.8rem'
-              }}>{t('events.sendReview')}</button>
+              <button type="submit">{t('events.sendReview')}</button>
             </div>
           </form>
         )}
@@ -322,33 +246,28 @@ function App() {
 
   // 🌟 INTERCETTAZIONE RITORNO DA STRIPE DOPO PAGAMENTO
   useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    const paymentStatus = query.get('payment_status');
-    const eventId = query.get('event_id');
+  const query = new URLSearchParams(window.location.search);
+  const paymentStatus = query.get('payment_status');
+  const eventId = query.get('event_id');
 
-    if (paymentStatus === 'success' && eventId) {
-      const verifyAndRegister = async () => {
-        try {
-          await axios.post(`${FIXED_BACKEND_URL}/api/events/${eventId}/confirm-payment`, {}, {
-            headers: { Authorization: `Bearer ${keycloak.token}` }
-          });
-          alert("Pagamento ricevuto! Il tuo biglietto è stato registrato con successo.");
-          window.history.replaceState({}, document.title, window.location.pathname);
-          loadEvents();
-          loadMyEvents();
-        } catch (err) {
-          console.error("Errore convalida pagamento:", err);
-        }
-      };
-      
-      if (keycloak.token) {
-        verifyAndRegister();
-      }
-    } else if (paymentStatus === 'cancel') {
-      alert("Pagamento annullato. Nessun biglietto è stato acquistato.");
+  if (!keycloak.token) return;
+
+  if (paymentStatus === 'success' && eventId) {
+    axios.post(`${FIXED_BACKEND_URL}/api/events/${eventId}/confirm-payment`, {}, {
+      headers: { Authorization: `Bearer ${keycloak.token}` }
+    }).then(() => {
+      alert(t('alerts.paymentSuccess'));
       window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [isLogged, events]);
+      loadEvents();
+      loadMyEvents();
+    }).catch(console.error);
+  }
+
+  if (paymentStatus === 'cancel') {
+    alert(t('alerts.paymentCancelled'));
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}, [isLogged]);
 
   const handleBookEvent = async (eventId) => {
     try {
@@ -452,13 +371,52 @@ function App() {
             </button>
 
             <button 
+              onClick={() => changeLanguage('fr')} 
+              style={{ 
+                background: 'none', border: 'none', fontSize: '1.6rem', cursor: 'pointer', 
+                opacity: isCurrentLanguage('fr') ? 1 : 0.4, 
+                transform: isCurrentLanguage('fr') ? 'scale(1.2)' : 'scale(1)',
+                transition: 'all 0.2s' 
+              }}
+              title="Français"
+            >
+              🇫🇷
+            </button>
+
+            <button 
+              onClick={() => changeLanguage('de')} 
+              style={{ 
+                background: 'none', border: 'none', fontSize: '1.6rem', cursor: 'pointer', 
+                opacity: isCurrentLanguage('de') ? 1 : 0.4, 
+                transform: isCurrentLanguage('de') ? 'scale(1.2)' : 'scale(1)',
+                transition: 'all 0.2s' 
+              }}
+              title="Deutsch"
+            >
+              🇩🇪
+            </button>
+
+            <button 
+              onClick={() => changeLanguage('es')} 
+              style={{ 
+                background: 'none', border: 'none', fontSize: '1.6rem', cursor: 'pointer', 
+                opacity: isCurrentLanguage('es') ? 1 : 0.4, 
+                transform: isCurrentLanguage('es') ? 'scale(1.2)' : 'scale(1)',
+                transition: 'all 0.2s' 
+              }}
+              title="Español"
+            >
+              🇪🇸
+            </button>
+
+            <button 
               onClick={toggleTheme}
               className="theme-toggle-btn"
               style={{
                 background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer',
                 marginLeft: '10px', padding: '4px', transition: 'transform 0.2s'
               }}
-              title={theme === 'light' ? 'Attiva Dark Mode' : 'Attiva Light Mode'}
+              title={theme === 'light' ? t('theme.toggleDark') : t('theme.toggleLight')}
             >
               {theme === 'light' ? '🌙' : '☀️'}
             </button>
@@ -468,7 +426,7 @@ function App() {
             <>
               <span className="welcome-text">
                 {t('navbar.welcome', { name: userData?.name })} {' '}
-                {isOrganizer && <span style={{fontSize: '11px', backgroundColor: '#e67e22', color: '#fff', padding: '2px 6px', borderRadius: '4px'}}>{t('navbar.organizerBadge')}</span>}
+                {isOrganizer && <span style={{fontSize: '11px', backgroundColor: '#7c3aed', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontWeight: '600'}}>{t('navbar.organizerBadge')}</span>}
               </span>
               <button className="btn-logout" onClick={() => keycloak.logout({ redirectUri: window.location.origin })}>{t('navbar.logout')}</button>
             </>
@@ -479,14 +437,11 @@ function App() {
       </nav>
 
       {!isLogged ? (
-        <div className="presentation-screen" style={{ textAlign: 'center', padding: '80px 20px', maxWidth: '800px', margin: '0 auto' }}>
+        <div className="presentation-screen">
           <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🎟️</div>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '15px' }}>{t('hero.title')}</h2>
-          <p style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '30px', lineHeight: '1.6' }}>{t('hero.description')}</p>
-          <button 
-            onClick={() => keycloak.login()} 
-            style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '16px 45px', fontSize: '1.2rem', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)', transition: 'transform 0.2s' }}
-          >
+          <h2>{t('hero.title')}</h2>
+          <p>{t('hero.description')}</p>
+          <button onClick={() => keycloak.login()}>
             {t('hero.cta')}
           </button>
         </div>
@@ -495,19 +450,17 @@ function App() {
           
           <div className="content-area">
             {isOrganizer && (
-              <section className="organizer-panel" style={{ padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '25px', border: '1px solid rgba(0,0,0,0.05)' }}>
-                <h3 style={{ marginTop: '0', marginBottom: '15px' }}>✨ {t('organizer.panelTitle')}</h3>
-                <form onSubmit={handleCreateEvent} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  <input type="text" placeholder={t('organizer.eventTitle')} value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                  <input type="text" placeholder={t('organizer.location')} value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                  <input type="date" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                  <input type="number" min="0" step="0.01" placeholder={t('organizer.price')} value={newEvent.price} onChange={e => setNewEvent({...newEvent, price: e.target.value})} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+              <section className="organizer-panel">
+                <h3>✨ {t('organizer.panelTitle')}</h3>
+                <form onSubmit={handleCreateEvent}>
+                  <input type="text" placeholder={t('organizer.eventTitle')} value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} required />
+                  <input type="text" placeholder={t('organizer.location')} value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} required />
+                  <input type="date" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} required />
+                  <input type="number" min="0" step="0.01" placeholder={t('organizer.price')} value={newEvent.price} onChange={e => setNewEvent({...newEvent, price: e.target.value})} required />
                   
-                  {/* Selettore di categoria aggiunto nel form in modo pulito ed estetico */}
                   <select 
                     value={newEvent.category} 
                     onChange={e => setNewEvent({...newEvent, category: e.target.value})}
-                    style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', gridColumn: 'span 2', backgroundColor: '#fff' }}
                   >
                     <option value="Generico">Generico</option>
                     <option value="Musica">Musica (Concerti, Festival Live)</option>
@@ -516,18 +469,18 @@ function App() {
                     <option value="Fiere e Festival">Fiere e Festival (Comics, Esposizioni)</option>
                   </select>
 
-                  <input type="number" min="1" placeholder={t('organizer.tickets')} value={newEvent.available_tickets} onChange={e => setNewEvent({...newEvent, available_tickets: e.target.value})} required style={{ gridColumn: 'span 2', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                  <textarea placeholder={t('organizer.description')} value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} required style={{ gridColumn: 'span 2', height: '80px', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', resize: 'vertical' }}></textarea>
-                  <button type="submit" style={{ gridColumn: 'span 2', backgroundColor: '#e67e22', color: 'white', cursor: 'pointer', padding: '12px', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '1rem' }}>{t('organizer.submit')}</button>
+                  <input type="number" min="1" placeholder={t('organizer.tickets')} value={newEvent.available_tickets} onChange={e => setNewEvent({...newEvent, available_tickets: e.target.value})} required />
+                  <textarea placeholder={t('organizer.description')} value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} required></textarea>
+                  <button type="submit">{t('organizer.submit')}</button>
                 </form>
               </section>
             )}
 
             <section className="events-section">
-              <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3>
                 🚀 {t('events.title')}
               </h3>
-              {loading ? <p>{t('events.loading')}</p> : (
+              {loading ? <p className="loading-text">{t('events.loading')}</p> : (
                 <div className="events-grid">
                   {events.map(ev => (
                     <EventCard 
@@ -548,25 +501,19 @@ function App() {
           </div>
 
           {!isOrganizer && (
-            <aside className="sidebar-tickets" style={{ padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)' }}>
-              <h3 style={{ marginTop: '0', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
+            <aside className="sidebar-tickets">
+              <h3>
                 🎟️ {t('sidebar.title')}
               </h3>
               {myEvents.length === 0 ? (
-                <p style={{ fontStyle: 'italic', fontSize: '0.9rem', color: '#9ca3af' }} className="no-tickets-text">{t('sidebar.noTickets')}</p>
+                <p className="no-tickets-text">{t('sidebar.noTickets')}</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="tickets-list">
                   {myEvents.map(booked => (
-                    <div key={booked.id} className="booked-event-item" style={{ 
-                      padding: '12px', 
-                      borderRadius: '8px', 
-                      borderLeft: '4px solid #4f46e5',
-                      backgroundColor: 'rgba(79, 70, 229, 0.03)',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
-                    }}>
-                      <h4 style={{ margin: '0 0 6px 0', fontSize: '0.95rem', fontWeight: '600' }}>{booked.title}</h4>
-                      <p style={{ margin: '2px 0', fontSize: '0.8rem', color: '#4b5563' }}>📍 {booked.location}</p>
-                      <p style={{ margin: '2px 0', fontSize: '0.8rem', color: '#4b5563' }}>📅 {new Date(booked.date).toLocaleDateString()}</p>
+                    <div key={booked.id} className="booked-event-item">
+                      <h4>{booked.title}</h4>
+                      <p>📍 {booked.location}</p>
+                      <p>📅 {new Date(booked.date).toLocaleDateString()}</p>
                     </div>
                   ))}
                 </div>

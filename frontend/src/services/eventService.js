@@ -17,7 +17,7 @@ export const bookEvent = async (eventId) => {
   try {
     const token = keycloak.token;
     
-    // Chiamata all'endpoint di checkout sulla porta 5001 gestita dall'istanza api
+    // Chiamata all'endpoint di checkout sulla porta 5000 gestita dall'istanza api
     const response = await api.post(`/api/events/${eventId}/checkout`, {}, {
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -1,0 +1,67 @@
+{
+  "translation": {
+    "navbar": {
+      "title": "EventHub",
+      "langIt": "🇮🇹",
+      "langEn": "🇬🇧",
+      "langFr": "🇫🇷",
+      "langDe": "🇩🇪",
+      "langEs": "🇪🇸",
+      "welcome": "Bienvenido, {{name}}",
+      "organizerBadge": "Organizador",
+      "logout": "Cerrar sesión",
+      "login": "Iniciar sesión"
+    },
+    "hero": {
+      "title": "Descubre y gestiona los mejores eventos en vivo 🚀",
+      "description": "Bienvenido a EventHub. Si eres fan, inicia sesión para reservar tus entradas y comentar tus experiencias. Si eres organizador, gestiona y publica tus eventos en pocos clics.",
+      "cta": "Comenzar • Iniciar sesión o registrarse 🎟️"
+    },
+    "organizer": {
+      "panelTitle": "🛠️ Panel de Organizador",
+      "eventTitle": "Título del evento",
+      "location": "Lugar",
+      "price": "Precio",
+      "tickets": "Entradas disponibles",
+      "description": "Descripción...",
+      "submit": "Publicar evento en vivo 🚀",
+      "categoryGeneric": "Genérico"
+    },
+    "events": {
+      "title": "📅 Eventos disponibles",
+      "loading": "Cargando...",
+      "priceFree": "Gratis",
+      "ticketsLeft": "Entradas: {{count}}",
+      "alreadyBooked": "🎟️ Ya reservado",
+      "bookNow": "Reservar ahora",
+      "delete": "🗑️ Eliminar evento",
+      "reviews": "⭐ Reseñas",
+      "noReviews": "Aún no hay reseñas.",
+      "writeReview": "Escribe un comentario...",
+      "sendReview": "Enviar",
+      "reviewSuccess": "⭐ ¡Reseña añadida!",
+      "reviewError": "❌ No se pudo añadir la reseña.",
+      "soldOut": "Agotado",
+      "limitedTickets": "¡Últimas entradas!",
+      "available": "Disponible"
+    },
+    "sidebar": {
+      "title": "🎟️ Tus entradas",
+      "noTickets": "Todavía no has reservado ningún evento."
+    },
+    "alerts": {
+      "confirmDelete": "¿Estás seguro de que deseas eliminar este evento permanentemente?",
+      "deleteSuccess": "🗑️ ¡Evento eliminado con éxito!",
+      "deleteError": "❌ No se pudo eliminar el evento.",
+      "bookSuccess": "🎉 ¡Reserva completada!",
+      "bookError": "❌ Error durante la reserva.",
+      "createSuccess": "🚀 ¡Evento publicado!",
+      "paymentSuccess": "✅ ¡Pago recibido! Tu entrada está confirmada.",
+      "paymentCancelled": "❌ Pago cancelado. No se ha comprado ninguna entrada."
+    },
+    "theme": {
+      "toggleDark": "Activar modo oscuro",
+      "toggleLight": "Activar modo claro"
+    }
+  }
+}

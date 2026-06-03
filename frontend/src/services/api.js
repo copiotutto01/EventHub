@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Forziamo l'URL sulla porta 5001 (aggiornato per bypassare la porta 5000 occupata)
-const BACKEND_URL = 'https://symmetrical-fishstick-4jxj6vp7qq5wc7wp-5001.app.github.dev';
+// Forziamo l'URL sulla porta 5000, che è la porta esposta dal backend nel container
+const BACKEND_URL = 'https://silver-space-meme-pj7rjj94jw5g39w66-5000.app.github.dev';
 
 const api = axios.create({
   baseURL: BACKEND_URL,

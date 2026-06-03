@@ -1,0 +1,67 @@
+{
+  "translation": {
+    "navbar": {
+      "title": "EventHub",
+      "langIt": "🇮🇹",
+      "langEn": "🇬🇧",
+      "langFr": "🇫🇷",
+      "langDe": "🇩🇪",
+      "langEs": "🇪🇸",
+      "welcome": "Willkommen, {{name}}",
+      "organizerBadge": "Organisator",
+      "logout": "Abmelden",
+      "login": "Einloggen"
+    },
+    "hero": {
+      "title": "Entdecke und verwalte die besten Live-Events 🚀",
+      "description": "Willkommen bei EventHub! Wenn du Fan bist, melde dich an, um Tickets zu buchen und Bewertungen zu schreiben. Wenn du ein Veranstalter bist, verwalte und veröffentliche deine Live-Events in wenigen Klicks.",
+      "cta": "Loslegen • Einloggen oder Registrieren 🎟️"
+    },
+    "organizer": {
+      "panelTitle": "🛠️ Veranstalterbereich",
+      "eventTitle": "Eventtitel",
+      "location": "Ort",
+      "price": "Preis",
+      "tickets": "Verfügbare Tickets",
+      "description": "Beschreibung...",
+      "submit": "Live-Event veröffentlichen 🚀",
+      "categoryGeneric": "Allgemein"
+    },
+    "events": {
+      "title": "📅 Verfügbare Events",
+      "loading": "Lädt...",
+      "priceFree": "Kostenlos",
+      "ticketsLeft": "Tickets: {{count}}",
+      "alreadyBooked": "🎟️ Bereits gebucht",
+      "bookNow": "Jetzt buchen",
+      "delete": "🗑️ Event löschen",
+      "reviews": "⭐ Bewertungen",
+      "noReviews": "Noch keine Rezensionen.",
+      "writeReview": "Schreibe einen Kommentar...",
+      "sendReview": "Senden",
+      "reviewSuccess": "⭐ Bewertung hinzugefügt!",
+      "reviewError": "❌ Bewertung konnte nicht hinzugefügt werden.",
+      "soldOut": "Ausverkauft",
+      "limitedTickets": "Nur noch wenige Plätze!",
+      "available": "Verfügbar"
+    },
+    "sidebar": {
+      "title": "🎟️ Deine Tickets",
+      "noTickets": "Du hast noch keine Events gebucht."
+    },
+    "alerts": {
+      "confirmDelete": "Bist du sicher, dass du dieses Event dauerhaft löschen möchtest?",
+      "deleteSuccess": "🗑️ Event erfolgreich gelöscht!",
+      "deleteError": "❌ Event konnte nicht gelöscht werden.",
+      "bookSuccess": "🎉 Buchung abgeschlossen!",
+      "bookError": "❌ Fehler bei der Buchung.",
+      "createSuccess": "🚀 Event veröffentlicht!",
+      "paymentSuccess": "✅ Zahlung erhalten! Dein Ticket ist bestätigt.",
+      "paymentCancelled": "❌ Zahlung abgebrochen. Es wurde kein Ticket gekauft."
+    },
+    "theme": {
+      "toggleDark": "Dunklen Modus aktivieren",
+      "toggleLight": "Hellen Modus aktivieren"
+    }
+  }
+}

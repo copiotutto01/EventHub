@@ -48,7 +48,13 @@
       "deleteError": "❌ Unable to delete event.",
       "bookSuccess": "🎉 Booking completed!",
       "bookError": "❌ Error during booking.",
-      "createSuccess": "🚀 Event published!"
+      "createSuccess": "🚀 Event published!",
+      "paymentSuccess": "✅ Payment received! Your ticket is confirmed.",
+      "paymentCancelled": "❌ Payment cancelled. No ticket was purchased."
+    },
+    "theme": {
+      "toggleDark": "Enable dark mode",
+      "toggleLight": "Enable light mode"
     }
   }
 }

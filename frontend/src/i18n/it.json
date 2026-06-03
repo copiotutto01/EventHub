@@ -48,7 +48,13 @@
       "deleteError": "❌ Impossibile eliminare l'evento.",
       "bookSuccess": "🎉 Prenotazione completata!",
       "bookError": "❌ Errore durante la prenotazione.",
-      "createSuccess": "🚀 Evento pubblicato!"
+      "createSuccess": "🚀 Evento pubblicato!",
+      "paymentSuccess": "✅ Pagamento ricevuto! Il tuo biglietto è confermato.",
+      "paymentCancelled": "❌ Pagamento annullato. Nessun biglietto è stato acquistato."
+    },
+    "theme": {
+      "toggleDark": "Attiva modalità scura",
+      "toggleLight": "Attiva modalità chiara"
     }
   }
 }

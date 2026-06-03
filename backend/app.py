@@ -27,13 +27,12 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     
-    # 🌟 CONFIGURAZIONE CORS AGGIORNATA PER SUPPORTARE CREDENTIALS E ORIGINI DINAMICHE
+    # 🌟 CONFIGURAZIONE CORS AGGIORNATA PER PERMETTERE IL FRONTEND E LE RICHIESTE AUTH
     CORS(app, resources={
         r"/*": {
             "origins": "*",
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-            "supports_credentials": True
         }
     })
     
@@ -41,7 +40,6 @@ def create_app():
     
     with app.app_context():
         from models.models import Event, Review
-        db.create_all()
             
         from routes.events import events_bp
         from routes.reviews import reviews_bp

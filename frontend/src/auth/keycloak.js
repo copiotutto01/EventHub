@@ -2,7 +2,7 @@ import Keycloak from 'keycloak-js';
 import axios from 'axios';
 
 const keycloakConfig = {
-  url: 'https://symmetrical-fishstick-4jxj6vp7qq5wc7wp-8080.app.github.dev', 
+  url: 'https://silver-space-meme-pj7rjj94jw5g39w66-8080.app.github.dev', 
   realm: 'eventhub',
   clientId: 'eventhub-frontend',
 };
